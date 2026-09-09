@@ -116,8 +116,13 @@ int main() {
     }
     double r = sqrt((sumaT - sumaR) / sumaT);
 
+    // Error cuadratico medio: E = ( (1/N) * sum |F(xi) - yi|^2 )^(1/2).
+    // La sumatoria de adentro es exactamente Sr, asi que E = sqrt(Sr/N).
+    double ecm = sqrt(sumaR / npuntos);
+
     cout << "\nSt = " << sumaT << ", Sr = " << sumaR << endl;
     cout << "Coeficiente de correlacion r = " << r << endl;
+    cout << "Error cuadratico medio Ecm = " << ecm << endl;
 
     return 0;
 }

@@ -102,7 +102,7 @@ void biseccion() {
 }
 
 void falsaposicion() {
-    double a, b, c, c_viejo, fa, fb, fc, error, error_porcentual;
+    double a, b, c, c_viejo, fa, fb, fc, error = 0.0, error_porcentual;
     int iter = 0, max_iter = 2000;
     double tol = 1e-5;
     auto f = [](double x) { return pow(x,10) - 1; };
@@ -122,7 +122,8 @@ void falsaposicion() {
         c = (a * fb - b * fa) / (fb - fa);
         fc = f(c);
         if (fc == 0.0) {
-            break; // Si encontramos la raiz exacta
+            error = 0.0; // Raiz exacta encontrada: no hay diferencia que medir
+            break;
         }
 
         if (fa* fc > 0){
