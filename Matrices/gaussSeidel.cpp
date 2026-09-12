@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <cmath>
+#include <iomanip>
 using namespace std;
 
 int main() {
@@ -67,7 +68,7 @@ int main() {
 
     // ---- 2do aspecto: inicializar el vector X ----
     // Un solo array: se actualiza en el lugar (esa es la diferencia con Jacobi).
-    vector<double> X(n, 0.0);
+    vector<double> X(n, 1.0);
     vector<double> Xviejo(n, 0.0);
 
     // ---- 3er aspecto: criterio de corte (tolerancia) ----
@@ -138,9 +139,12 @@ int main() {
     double error_porcentual_final = (normaXFinal == 0) ? 0.0 : (error / normaXFinal) * 100;
 
     cout << "Solucion:" << endl;
+    cout << fixed << setprecision(10);
     for (int i = 0; i < n; i++) {
         cout << "x" << i + 1 << " = " << X[i] << endl;
     }
+    cout.unsetf(ios::fixed);
+    cout << setprecision(6);
     cout << "Error final: " << error << ", error porcentual: " << error_porcentual_final
          << "%, iteraciones: " << iter << endl;
 

@@ -23,7 +23,7 @@ using namespace std;
 
 // ---- ACA se elige el problema: la funcion a interpolar ----
 double f(double x) {
-    return exp(-x * x);                  // Problema 2, item 1: f(x) = e^(-x^2)
+    return log(x*x + 1) - sin(x);                  // Problema 2, item 1: f(x) = e^(-x^2)
     // return 4*x*x*x - 3*x*x + 2;       // item 2: f(x) = 4x^3 - 3x^2 + 2
     // return pow(x, x);                 // item 3: f(x) = x^x  (solo definida para x>0)
 }

@@ -1,6 +1,24 @@
 .claude
 .vscode
-Matrices/*.exe
-LocalizacionRaices/*.exe
-Interpolacion/*.exe
-AjusteDeCurvas/*.exe
+
+# Binarios compilados: se generan al correr g++, no van al repo. El lab de la
+# facultad compila en Linux con "g++ archivo.cpp -o nombre" (sin extension),
+# asi que un simple "*.exe" no alcanza -- se ignora todo dentro de cada
+# carpeta de codigo excepto las extensiones que sí queremos versionar.
+LocalizacionRaices/*
+!LocalizacionRaices/*.cpp
+!LocalizacionRaices/*.txt
+
+Matrices/*
+!Matrices/*.cpp
+!Matrices/*.txt
+
+Interpolacion/*
+!Interpolacion/*.cpp
+!Interpolacion/*.txt
+!Interpolacion/*.csv
+
+AjusteDeCurvas/*
+!AjusteDeCurvas/*.cpp
+!AjusteDeCurvas/*.txt
+!AjusteDeCurvas/*.csv
