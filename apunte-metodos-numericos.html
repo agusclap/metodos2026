@@ -358,6 +358,7 @@
         <li><a href="#regresion-lineal">Regresión lineal</a></li>
         <li><a href="#coeficiente-correlacion">Coeficiente de correlación</a></li>
         <li><a href="#regresion-arbitraria">Funciones arbitrarias</a></li>
+        <li><a href="#linealizacion">Linealizar modelos no lineales</a></li>
         <li><a href="#regresion-polinomica">Regresión polinómica</a></li>
       </ul>
     </div>
@@ -367,9 +368,10 @@
         <li><a href="#guia-programas">Guía de programas (cuál usar)</a></li>
         <li><a href="#tipos-de-error">Tipos de error (estimado vs. exacto)</a></li>
         <li><a href="#errores-comunes">Errores recurrentes en C++</a></li>
+        <li><a href="#geogebra-portable">GeoGebra portable (Linux)</a></li>
       </ul>
     </div>
-    <div class="status">Guía de programas agregada (parcial modelo) — hasta acá entra el primer parcial.</div>
+    <div class="status">GeoGebra portable agregado — hasta acá entra el primer parcial.</div>
   </nav>
 
   <main>
@@ -1136,6 +1138,31 @@ Sin conflicto (cada una eligio una columna distinta) → orden nuevo:
           <li>Si ninguna asignación logra que cada fila domine en su columna, es señal de que ese sistema no tiene ningún reordenamiento que lo vuelva DD (aunque podría converger igual, sin garantía).</li>
         </ul>
 
+        <h3>Cuándo conviene abandonar el iterativo e ir directo a Gauss</h3>
+        <p>
+          A veces el problema no es que falte encontrar el reordenamiento correcto — es que
+          <strong>ningún</strong> reordenamiento va a funcionar, porque cada fila individualmente
+          ya está al límite (empatada, no estrictamente dominante) sin importar qué columna se le
+          asigne.
+        </p>
+        <div class="callout warn">
+          <div class="callout-label">Caso real: matriz tridiagonal 100×100</div>
+          <p>
+            Sistema banda con diagonal <code>2</code> y un <code>1</code> a cada lado
+            (<code>x_{i-1} + 2x_i + x_{i+1} = 6</code>). Para casi todas las filas: diagonal
+            <code>=2</code>, suma de los otros dos <code>=1+1=2</code>. <code>2 &gt; 2</code> es
+            falso — <strong>empate</strong>, no dominancia estricta. Y esto no depende del orden de
+            las filas: por más que reordenes, cada fila individual sigue empatada consigo misma,
+            porque el empate viene de sus propios coeficientes, no de en qué posición está.
+          </p>
+          <p style="margin-top:.5rem;">
+            Acá no vale la pena seguir insistiendo con Jacobi/Gauss-Seidel buscando un orden
+            mágico que no existe. La salida es <strong>usar Gauss</strong> (método directo): no
+            depende de ningún criterio de dominancia, y para tamaños como <code>n=100</code> sigue
+            siendo trivial en tiempo de cómputo (<code>~100³</code> operaciones, milisegundos).
+          </p>
+        </div>
+
         <h3>Caso puntual: un "no converge" ¿es real, o es demasiado lento?</h3>
         <p>
           El chequeo de divergencia del pseudocódigo (comparar el error contra el de la iteración
@@ -1421,6 +1448,35 @@ Si evaluamos en x_hat:
           <p style="margin-top:.5rem;">Interpolando en <code>x=2</code> (adentro del rango): Lagrange y coeficientes indeterminados dan los dos <code>P(2) = 1,1111</code> (=10/9). Coincide.</p>
           <p style="margin-top:.5rem;">Interpolando en <code>x=4</code>: <code>P(4) = 3,4444</code> (=31/9) — cae entre <code>y=2</code> (en x=3) y <code>y=8</code> (en x=6), como se esperaba para este caso de grado bajo.</p>
         </div>
+
+        <h3>Ojo al buscar una raíz sobre el polinomio interpolante</h3>
+        <p>
+          El polinomio de Lagrange solo tiene garantía de coincidir con la función real <strong>en
+          los nodos</strong>. En cualquier otro punto — incluida, muchas veces, la raíz que estás
+          buscando — no hay ninguna garantía de qué tan cerca está de la función verdadera. Cuantos
+          menos nodos y más rápido cambie la función entre ellos, peor.
+        </p>
+        <div class="callout warn">
+          <div class="callout-label">Caso real: 20% de error por confiar en el polinomio lejos de los nodos</div>
+          <p>
+            Mismo problema, dos formas de buscar la misma raíz — una usando el modelo ajustado
+            (<code>f(x)=e<sup>x²</sup>-2</code>, de una regresión) y otra usando el polinomio de
+            Lagrange que interpola los mismos 4 puntos de la tabla (<code>x: 0.5, 0.8, 1.3, 2.0</code>):
+          </p>
+          <div class="panel" style="margin:.6rem 0;">
+            <pre class="pseudo">                        modelo ajustado (exp)      polinomio de Lagrange
+Raiz obtenida:          0.8325546041                0.9992333678
+Error absoluto exacto:  7.06e-9                      0.1667
+Error porcentual:       8.48e-7 %                    20.02 %</pre>
+          </div>
+          <p style="margin-top:.5rem;">
+            El polinomio interpola perfecto en los 4 puntos de la tabla — pero la raíz real
+            (<code>x≈0.83</code>) cae <em>entre</em> dos nodos bastante separados (<code>0.8</code> y
+            <code>1.3</code>), justo donde el cúbico no tiene ninguna obligación de parecerse a la
+            exponencial real. Resultado: 20% de error, nada despreciable. No es un bug — es una
+            consecuencia esperable de interpolar con pocos nodos una función que crece rápido.
+          </p>
+        </div>
       </section>
     </div>
 
@@ -1534,6 +1590,57 @@ a = 1.8132   b = 1.1724</pre>
             </div>
           </div>
           <p>Mismo sistema 2×2 de siempre, distintas sumas — resolver con Gauss. Con los 7 datos del parcial: <code>a=0,678</code>, <code>b=-1,928</code>, <code>r=0,970</code> (buen ajuste, no perfecto).</p>
+        </div>
+      </section>
+
+      <section class="topic" id="linealizacion">
+        <h2>Linealizar modelos no lineales</h2>
+        <p>
+          La sección anterior sirve cuando el modelo ya es lineal <strong>en sus parámetros</strong>
+          (<code>a·sen(x)+b·cos(x)</code> es lineal en <code>a,b</code>, aunque tenga senos y
+          cosenos adentro). Pero hay modelos donde eso no alcanza — por ejemplo
+          <code>F(x) = a·e<sup>x²</sup> + b</code>. Ahí "regresión lineal" no significa ajustar una
+          recta en <code>x</code> — significa <strong>inventar una variable nueva</strong> que sí
+          haga que el modelo sea una recta.
+        </p>
+        <p>
+          El truco: si le ponés un nombre a la parte no lineal, <code>u = e<sup>x²</sup></code>, el
+          modelo queda <code>F = a·u + b</code> — una recta común, en <code>u</code> en vez de en
+          <code>x</code>.
+        </p>
+        <div class="panel">
+          <div class="panel-label">Receta</div>
+          <pre class="pseudo">1. Identificar la parte no lineal del modelo y llamarla u (ej: u = exp(x^2))
+2. Calcular u_i = esa formula, para cada x_i de la tabla (el y_i no cambia)
+3. Armar una tabla nueva (u_i, y_i)
+4. Correr una regresion lineal COMUN sobre (u,y): y = a*u + b
+5. Los a,b que salen son los del modelo original -- no hace falta "deshacer" nada</pre>
+        </div>
+        <div class="callout warn">
+          <div class="callout-label">El error más fácil de cometer</div>
+          <p>
+            Tirarle la tabla <code>(x,y)</code> cruda a una regresión lineal, sin linealizar antes.
+            Compila y da un resultado — pero es el ajuste de un modelo <strong>distinto</strong>
+            (una recta en <code>x</code>, no la exponencial que pide el enunciado). La señal de
+            alarma es un <code>r</code> mediocre que no tiene por qué estar mal: en un caso real,
+            ajustar <code>y</code> contra <code>x</code> cruda dio <code>r=0,896</code> (dudoso para
+            un ajuste que se supone bueno); linealizando con <code>u=exp(x²)</code> y ajustando
+            contra eso, el mismo dataset dio <code>r=0,9999999999</code> — la diferencia entre un
+            ajuste mediocre y uno prácticamente perfecto era, exclusivamente, no haber linealizado.
+          </p>
+        </div>
+        <div class="callout verified">
+          <div class="callout-label">Ejemplo real</div>
+          <p>Tabla: <code>x: 0.5, 0.8, 1.3, 2.0</code> &nbsp; <code>y: -0.716, -0.103, 3.419, 52.598</code>. Modelo: <code>F(x)=a·e<sup>x²</sup>+b</code>.</p>
+          <div class="panel" style="margin:.6rem 0;">
+            <pre class="pseudo">u_i = exp(x_i^2):  1.2840254167, 1.8964808793, 5.4194807051, 54.5981500331
+
+Regresion lineal de y contra u:
+  a (pendiente)  = 0.999996  ~ 1
+  b (ordenada)   = -1.99997  ~ -2
+  r = 0.9999999999</pre>
+          </div>
+          <p style="margin-top:.5rem;">Una vez que tenés <code>a,b</code>, el resto (buscar la raíz, comparar contra el polinomio de Lagrange, etc.) sigue exactamente igual que con cualquier otro modelo ya ajustado.</p>
         </div>
       </section>
 
@@ -1873,6 +1980,23 @@ error porcentual exacto  = 7.6923076923 %   (contra x=2)</pre>
             porcentaje.
           </p>
         </div>
+
+        <div class="callout warn">
+          <div class="callout-label">Al calcular a mano: redondear recién al final, nunca en el medio</div>
+          <p>
+            Si una cuenta a mano tiene varios pasos (por ejemplo, una iteración de Gauss-Seidel que
+            usa <code>x₁</code> recién calculado para obtener <code>x₂</code>), arrastrar un valor
+            ya redondeado de un paso al siguiente contamina todo lo que viene después — el error
+            final deja de reflejar el método y empieza a reflejar el redondeo intermedio.
+          </p>
+          <p style="margin-top:.5rem;">
+            <strong>Caso real:</strong> arrastrando <code>x₂=4,26</code> (redondeado de
+            <code>4,2667</code>) en vez del valor completo, el error absoluto exacto de esa
+            iteración dio <code>1,3552</code> en vez del <code>1,3597</code> correcto — una
+            diferencia visible, solo por haber redondeado un paso antes de tiempo. Redondear
+            <em>únicamente</em> al escribir la respuesta final, nunca durante la cuenta.
+          </p>
+        </div>
       </section>
     </div>
 
@@ -1908,7 +2032,58 @@ error porcentual exacto  = 7.6923076923 %   (contra x=2)</pre>
             matriz singular, semilla que hace fallar el chequeo de derivada, etc.), no solo el
             caso fácil que "anda a la primera".
           </li>
+          <li>
+            <strong>Una lambda que usa otra lambda tiene que capturarla explícitamente.</strong>
+            Si <code>f</code> es una lambda (<code>auto f = [](double x){...};</code>) y armás otra
+            lambda que la usa adentro (por ejemplo, una derivada por diferencias finitas:
+            <code>auto df = [](double x){ return f(x+h)-f(x-h); };</code>), el <code>[]</code>
+            vacío de <code>df</code> no compila — hay que poner <code>[f]</code> (o <code>[&]</code>)
+            para que <code>df</code> tenga acceso a <code>f</code>. Es fácil de pasar por alto
+            porque en C++ normal (funciones sueltas, no lambdas) esto nunca hace falta.
+          </li>
         </ol>
+      </section>
+    </div>
+
+    <!-- ===================== TRANSVERSAL: GEOGEBRA PORTABLE ===================== -->
+    <div class="chapter">
+      <div class="chapter-label">Transversal — GeoGebra portable (Linux)</div>
+      <section class="topic" id="geogebra-portable" style="border-bottom:none; padding-bottom:0;">
+        <h2>Cómo correrlo en las computadoras del laboratorio (Ubuntu)</h2>
+        <p>
+          El archivo <code>GeoGebra-Linux64-Portable-6-0-804-0.zip</code> (carpeta Descargas) es la
+          versión portable de GeoGebra Classic 6 para Linux x64 — no necesita instalación ni
+          permisos de administrador, así que sirve tal cual en una compu del lab sin internet.
+          Llevalo en el pendrive junto con los <code>.cpp</code>.
+        </p>
+
+        <div class="panel">
+          <div class="panel-label">Terminal (Ubuntu) — desde la carpeta donde está el .zip</div>
+          <pre class="pseudo">unzip GeoGebra-Linux64-Portable-6-0-804-0.zip
+cd GeoGebra-linux-x64
+chmod +x GeoGebra
+./GeoGebra</pre>
+        </div>
+
+        <ul>
+          <li><strong>¿Por qué el <code>chmod +x</code>?</strong> Los <code>.zip</code> no siempre conservan el permiso de ejecución de Linux — sin él, <code>./GeoGebra</code> tira "Permission denied".</li>
+          <li><strong>Si no hay terminal a mano:</strong> se puede descomprimir con el administrador de archivos (clic derecho → "Extraer aquí"), y despues hacer doble clic en el ejecutable <code>GeoGebra</code> — algunos administradores de archivos ya lo abren directo si el permiso de ejecución quedó bien.</li>
+        </ul>
+
+        <div class="callout warn">
+          <div class="callout-label">Si tira un error de "sandbox" al abrir</div>
+          <p>
+            Es un problema típico de las apps empaquetadas con Electron (como GeoGebra) cuando se
+            corren sin ser dueño del sistema (exactamente el caso de una compu del lab, sin
+            <code>sudo</code>): el archivo <code>chrome-sandbox</code> necesita permisos especiales
+            de root para activarse, y sin eso GeoGebra puede negarse a arrancar. La solución es
+            correrlo saltando el sandbox:
+          </p>
+          <div class="panel" style="margin:.6rem 0 0;">
+            <pre class="pseudo">./GeoGebra --no-sandbox</pre>
+          </div>
+          <p style="margin-top:.5rem;">Es seguro para este uso — el sandbox de Electron protege contra código web malicioso, y acá no se está navegando ninguna página, solo usando la app localmente.</p>
+        </div>
       </section>
     </div>
   </main>

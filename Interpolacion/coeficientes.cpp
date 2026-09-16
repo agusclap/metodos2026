@@ -49,9 +49,16 @@ int main() {
     for (int i = 0; i < m - 1; i++) {
         int p = i;
         if (fabs(A[i][i]) < 1e-4) {
+            cout << "Pivoteo necesario: |A[" << i+1 << "][" << i+1 << "]| = "
+                 << fabs(A[i][i]) << " es muy chico (< 1e-4)." << endl;
             double mmax = fabs(A[i][i]);
             for (int l = i + 1; l < m; l++) {
                 if (fabs(A[l][i]) > mmax) { mmax = fabs(A[l][i]); p = l; }
+            }
+            if (p != i) {
+                cout << "  -> se intercambia la fila " << i+1 << " con la fila " << p+1 << endl;
+            } else {
+                cout << "  -> no se encontro una fila mejor, se sigue con el mismo pivote" << endl;
             }
             for (int l = 0; l < m; l++) { double aux = A[p][l]; A[p][l] = A[i][l]; A[i][l] = aux; }
             double aux = b[p]; b[p] = b[i]; b[i] = aux;
