@@ -68,7 +68,7 @@ int main() {
 
     // ---- 2do aspecto: inicializar el vector X ----
     // Un solo array: se actualiza en el lugar (esa es la diferencia con Jacobi).
-    vector<double> X(n, 1.0);
+    vector<double> X(n, 0.0);
     vector<double> Xviejo(n, 0.0);
 
     // ---- 3er aspecto: criterio de corte (tolerancia) ----
@@ -87,6 +87,8 @@ int main() {
     double error_viejo = 1000;
     double error;
     int iter = 0;
+
+    cout << fixed << setprecision(10); // para que cada iteracion muestre las cifras completas, no 6 sig. figs redondeadas
 
     do {
         iter++;
@@ -125,8 +127,9 @@ int main() {
         }
         error_viejo = error;
 
-        cout << "Iteracion " << iter << ": error = " << error
-             << ", error porcentual = " << error_porcentual << "%" << endl;
+        cout << "Iteracion " << iter << ": ";
+        for (int i = 0; i < n; i++) cout << "x" << i + 1 << " = " << X[i] << ", ";
+        cout << "error = " << error << ", error porcentual = " << error_porcentual << "%" << endl;
 
     } while (error > tolerancia);
 

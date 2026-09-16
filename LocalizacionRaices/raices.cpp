@@ -55,10 +55,10 @@ int main (void) {
 }
 
 void biseccion() {
-    double a, b, c, c_viejo, fa, fb, fc, error;
+    double a, b, c, c_viejo, fa, fb, fc, error, error_porcentual;
     int iter = 0, max_iter = 100;
-    double tol = 0.01;
-    auto f = [](double x) { return ((x+1)/(x+4)) - 0.25*x; };
+    double tol = 1e-8;
+    auto f = [](double x) { return -15.3315 + 58.6036*x - 74.2202*x*x + 30.9504*x*x*x; };
     cout << "Ingrese el intervalo [a, b]: ";
     cin >> a >> b;
 
@@ -69,23 +69,24 @@ void biseccion() {
         cerr << "El intervalo no es valido." << endl;
         return;
     }
-    //c_viejo = a;
-    c_viejo = b; // el enunciado pide x_viejo=3.2=b en la primera iteracion, no a
+    c_viejo = a;
+    //c_viejo = b; // el enunciado pide x_viejo=3.2=b en la primera iteracion, no a
     do {
         c = (a + b) / 2;
         fc = f(c);
 
-        //error = fabs(c - c_viejo);
+        error = fabs(c - c_viejo);
         // OJO: (1/2) en C++ es division ENTERA (da 0, no 0.5) -> denominador
         // quedaba en 0 -> error=inf. Con 0.5 (o 1.0/2) se fuerza a punto flotante.
-        error = (fabs(c - c_viejo) / (0.5 * fabs(c + c_viejo))) * 100;
+        //error = (fabs(c - c_viejo) / (0.5 * fabs(c + c_viejo))) * 100;
+        error_porcentual = fabs(error / c) * 100; // solo informativo, no se usa para cortar
         c_viejo = c;
-
         cout << "Iteracion " << iter + 1 << ": a = " << a << ", b = " << b << ", c = " << c
-             << ", error = " << error << endl;
+             << ", error = " << error << ", error porcentual = " << error_porcentual << "%" << endl;
 
         if (fc == 0.0) {
             error = 0.0;
+            error_porcentual = 0.0;
             break;
         }
         if (error < tol) {
@@ -104,7 +105,7 @@ void biseccion() {
 
     cout << fixed << setprecision(10);
     cout << "La raiz es: " << c << ", el error estimado es: " << error
-         << "% y el numero de iteraciones es: " << iter << endl;
+         << "% y el numero de iteraciones es: " << iter <<" error porcentual: "<<error_porcentual<<endl;
     cout.unsetf(ios::fixed);
     cout << setprecision(6);
 }
@@ -112,8 +113,8 @@ void biseccion() {
 void falsaposicion() {
     double a, b, c, c_viejo, fa, fb, fc, error = 0.0, error_porcentual;
     int iter = 0, max_iter = 2000;
-    double tol = 1e-5;
-    auto f = [](double x) { return log(x*x + 1) - sin(x); };
+    double tol = 1e-8;
+    auto f = [](double x) { return -0.952854 - 0.206982*x + 2.12295*x*x; };
     cout << "Ingrese el intervalo [a, b]: ";
     cin >> a >> b;
 
@@ -154,7 +155,7 @@ void falsaposicion() {
         }
 
         iter++;
-    } while (error > tol && iter < 10);
+    } while (error > tol && iter < max_iter);
     error_porcentual = ( error / fabs(c) ) * 100;
     cout << "La raiz es: " << c << " y el error es: "<<error<< " y el error porcentual es: "<<error_porcentual<<endl;
 }
@@ -164,8 +165,9 @@ void falsaposicion() {
 void puntofijo(){
     double x0, x1, error, gp;
     int iter = 0, max_iter = 10000;
-    double tol = 1e-12; 
-    auto g = [] (double x) {return asin(log(x*x + 1));};  
+    double tol = 1e-6;
+    //auto g = [] (double x) {return sqrt((x+5)/2);};  // problema anterior: puntos fijos de g
+    auto g = [] (double x) {return (sin(3*x) - log10(x))/2;};  // 3x+sin(x)-e^x=0 -> x=(e^x-sin(x))/3
     
     cout << "Ingrese el valor inicial x0: ";
     cin >> x0;
@@ -197,9 +199,10 @@ void puntofijo(){
 void newtonRaphson(){
     double x0, x1, error;
     int iter = 0, max_iter = 1000;
-    double tol = 0.01;
-    auto f = [](double x) { return ((x+1)/(x+4)) - 0.25*x; };
-    auto df = [](double x) { return (3/(pow(x+4,2))) - 0.25; }; // Alternativa: (f(x + 0.001) - f(xi)) / 0.001
+    double tol = 1e-6;
+    auto f = [](double x) { return 2*x + log10(x) - sin(3*x); };
+    //auto df = [](double x) { return pow(x,x) * (log(x) + 1); }; // derivada analitica (item a)
+    auto df = [f](double x) { return ((3*f(x) - 4*f(x-0.01) + f(x-2*0.01))/(2*0.01)); }; // derivada aproximada, diferencia finita (item c: h=0.5, cambiar por 0.01 para el segundo caso)
     cout << "Ingrese el valor inicial x0: ";
     cin >> x0;
 
@@ -209,16 +212,17 @@ void newtonRaphson(){
             return;
         }
         x1 = x0 - f(x0) / df(x0);
-        //error = fabs(x1 - x0);
-        error = (fabs(x1 - x0) / (0.5 * fabs(x1 + x0))) * 100;
+        error = fabs(x1 - x0);
+        //error = (fabs(x1 - x0) / (0.5 * fabs(x1 + x0))) * 100;
         cout << "Iteracion " << iter + 1 << ": x0 = " << x0 << ", x1 = " << x1
              << ", error = " << error << endl;
 
         x0 = x1;
         iter++;
-    } while (iter < 4 && error > tol);
-    setprecision(10);
+    } while (iter < max_iter && error > tol);
     cout << "La raiz es: " << x1 << ", el error es: " << error << " y la cantidad total de iteraciones es: " << iter << endl;
+    cout.unsetf(ios::fixed);
+    cout << setprecision(6);
 }
 
 void secante() {

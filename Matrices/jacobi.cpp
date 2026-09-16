@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <cmath>
+#include <iomanip>
 using namespace std;
 
 int main() {
@@ -79,6 +80,8 @@ int main() {
     double error;
     int iter = 0;
 
+    cout << fixed << setprecision(10); // para que cada iteracion muestre las cifras completas, no 6 sig. figs redondeadas
+
     do {
         iter++;
 
@@ -116,8 +119,9 @@ int main() {
             Xviejo[i] = Xnuevo[i];
         }
 
-        cout << "Iteracion " << iter << ": error = " << error
-             << ", error porcentual = " << error_porcentual << "%" << endl;
+        cout << "Iteracion " << iter << ": ";
+        for (int i = 0; i < n; i++) cout << "x" << i + 1 << " = " << Xnuevo[i] << ", ";
+        cout << "error = " << error << ", error porcentual = " << error_porcentual << "%" << endl;
 
     } while (error > tolerancia);
 

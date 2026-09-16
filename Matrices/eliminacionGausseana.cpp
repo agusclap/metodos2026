@@ -67,7 +67,7 @@ bool leerSistema(vector<vector<double>> &A, vector<double> &b, int &n) {
 // signoDet: arranca en 1 (afuera) y se multiplica por -1 cada vez que se
 // intercambian dos filas de verdad. Cada swap de filas cambia el signo del
 // determinante, asi que hay que arrastrarlo para no calcularlo mal.
-void triangular(vector<vector<double>> &A, vector<double> &b, int n, int &signoDet) {
+void triangular(vector<vector<double>> &A, vector<double> &b, int n, int &signoDet, bool &huboPivoteo) {
     for (int i = 0; i < n - 1; i++) {
         int p = i;
         if (fabs(A[i][i]) < pow(10, -4)) { // Pivoteo: A[i][i] muy chica
@@ -83,6 +83,7 @@ void triangular(vector<vector<double>> &A, vector<double> &b, int n, int &signoD
             if (p != i) {
                 cout << "  -> se intercambia la fila " << i+1 << " con la fila " << p+1 << endl;
                 signoDet = -signoDet;
+                huboPivoteo = true;
             } else {
                 cout << "  -> no se encontro una fila mejor, se sigue con el mismo pivote" << endl;
             }
@@ -158,7 +159,8 @@ void gauss() {
     double normaA = normaFrobenius(A, n); // antes de triangular, con la matriz original
 
     int signoDet = 1;
-    triangular(A, b, n, signoDet);
+    bool huboPivoteo = false;
+    triangular(A, b, n, signoDet, huboPivoteo);
 
     // ---- Calcular det(A) ----
     // signoDet compensa los intercambios de filas hechos durante el pivoteo
@@ -190,6 +192,7 @@ void gauss() {
     for (int i = 0; i < n; i++) {
         cout << "x" << i + 1 << " = " << x[i] << endl;
     }
+    cout << "Se realizo pivoteo: " << (huboPivoteo ? "Si" : "No") << endl;
 }
 
 void gaussJordan() {
@@ -202,7 +205,8 @@ void gaussJordan() {
 
     // Misma triangulacion que Gauss (hacia abajo del pivote).
     int signoDet = 1;
-    triangular(A, b, n, signoDet);
+    bool huboPivoteo = false;
+    triangular(A, b, n, signoDet, huboPivoteo);
 
     // El determinante se calcula ACA, con la diagonal recien triangulada.
     // Ojo: si se calculara despues de normalizar filas (mas abajo), la
@@ -243,4 +247,5 @@ void gaussJordan() {
     for (int i = 0; i < n; i++) {
         cout << "x" << i + 1 << " = " << x[i] << endl;
     }
+    cout << "Se realizo pivoteo: " << (huboPivoteo ? "Si" : "No") << endl;
 }

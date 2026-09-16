@@ -1,0 +1,1919 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<title>Apuntes de Métodos Numéricos</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --paper:      #f2f4ee;
+    --paper-2:    #eaede4;
+    --grid-line:  #d7ddcf;
+    --ink:        #20262b;
+    --ink-muted:  #5b6560;
+    --rule:       #ccd3c6;
+    --blue:       #274a72;
+    --blue-soft:  #e4eaf1;
+    --blue-soft-2:#dbe4ee;
+    --red:        #9c3d2e;
+    --red-soft:   #f7e8e3;
+    --green:      #3d6b4d;
+    --green-soft: #e6efe6;
+    --code-surface: #fbfaf6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:      #15181a;
+      --paper-2:    #1b1f21;
+      --grid-line:  #262b2c;
+      --ink:        #e9eae5;
+      --ink-muted:  #9aa39a;
+      --rule:       #33393a;
+      --blue:       #8fb0d6;
+      --blue-soft:  #1c2733;
+      --blue-soft-2:#202d3b;
+      --red:        #dd9384;
+      --red-soft:   #2c1d19;
+      --green:      #93c1a4;
+      --green-soft: #182a1e;
+      --code-surface: #101314;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:      #15181a;
+    --paper-2:    #1b1f21;
+    --grid-line:  #262b2c;
+    --ink:        #e9eae5;
+    --ink-muted:  #9aa39a;
+    --rule:       #33393a;
+    --blue:       #8fb0d6;
+    --blue-soft:  #1c2733;
+    --blue-soft-2:#202d3b;
+    --red:        #dd9384;
+    --red-soft:   #2c1d19;
+    --green:      #93c1a4;
+    --green-soft: #182a1e;
+    --code-surface: #101314;
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(0deg, var(--grid-line) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(90deg, var(--grid-line) 0 1px, transparent 1px 28px),
+      var(--paper);
+    background-attachment: local;
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  h1,h2,h3,h4{
+    font-family: "IBM Plex Serif", Georgia, serif;
+    font-weight: 600;
+    text-wrap: balance;
+    color: var(--ink);
+    margin: 0 0 .5rem 0;
+  }
+  code, .mono{ font-family: "IBM Plex Mono", ui-monospace, monospace; }
+  a{ color: var(--blue); }
+  ::selection{ background: var(--blue-soft-2); }
+
+  .shell{
+    max-width: 1180px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 250px minmax(0,1fr);
+    gap: 2.5rem;
+    padding: 2.75rem 1.75rem 6rem;
+  }
+
+  /* ---- masthead ---- */
+  .masthead{
+    grid-column: 1 / -1;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 1.35rem;
+    margin-bottom: .25rem;
+    display:flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .masthead .eyebrow{
+    font-family:"IBM Plex Mono";
+    font-size: .74rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: .4rem;
+  }
+  .masthead h1{ font-size: 1.9rem; margin:0; }
+  .masthead .meta{
+    font-family:"IBM Plex Mono";
+    font-size: .78rem;
+    color: var(--ink-muted);
+    text-align: right;
+    line-height: 1.5;
+  }
+
+  /* ---- sidebar / TOC ---- */
+  nav.toc{
+    position: sticky;
+    top: 2rem;
+    align-self: start;
+    font-size: .89rem;
+  }
+  nav.toc .toc-group{ margin-bottom: 1.5rem; }
+  nav.toc .toc-heading{
+    font-family:"IBM Plex Mono";
+    font-size: .72rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: .5rem;
+  }
+  nav.toc ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.32rem; }
+  nav.toc a{
+    color: var(--ink);
+    text-decoration:none;
+    display:block;
+    padding: .18rem 0 .18rem .65rem;
+    border-left: 2px solid var(--rule);
+  }
+  nav.toc a:hover{ border-left-color: var(--blue); color: var(--blue); }
+  nav.toc .status{
+    font-family:"IBM Plex Mono";
+    font-size:.68rem;
+    color: var(--ink-muted);
+    margin-top: .6rem;
+    padding-left: .65rem;
+  }
+
+  main{ min-width:0; }
+  .intro{
+    max-width: 62ch;
+    color: var(--ink-muted);
+    margin-bottom: 2.6rem;
+    font-size: .98rem;
+  }
+
+  .chapter{ margin-bottom: 3.2rem; }
+  .chapter > .chapter-label{
+    font-family:"IBM Plex Mono";
+    font-size:.76rem;
+    letter-spacing:.08em;
+    text-transform: uppercase;
+    color: var(--blue);
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: .5rem;
+    margin-bottom: 1.4rem;
+  }
+
+  section.topic{
+    margin-bottom: 2.6rem;
+    padding-bottom: 2.6rem;
+    border-bottom: 1px dashed var(--rule);
+  }
+  section.topic:last-child{ border-bottom:none; }
+  section.topic h2{ font-size: 1.32rem; }
+  section.topic h2 .tag{
+    font-family:"IBM Plex Mono";
+    font-size: .68rem;
+    color: var(--ink-muted);
+    font-weight: 400;
+    margin-left: .6rem;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: .1rem .4rem;
+    vertical-align: middle;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  section.topic h3{
+    font-size: .98rem;
+    margin-top: 1.5rem;
+    color: var(--ink);
+  }
+  section.topic p{ max-width: 68ch; }
+  section.topic ul, section.topic ol{ max-width: 68ch; padding-left: 1.25rem; }
+  section.topic li{ margin-bottom: .3rem; }
+
+  /* ---- formula / pseudocode blocks ---- */
+  .panel{
+    background: var(--code-surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    margin: .9rem 0 1.2rem;
+    overflow-x: auto;
+  }
+  .panel .panel-label{
+    font-family:"IBM Plex Mono";
+    font-size: .68rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: .55rem;
+  }
+  pre.pseudo{
+    font-family:"IBM Plex Mono";
+    font-size: .87rem;
+    line-height: 1.55;
+    margin:0;
+    white-space: pre;
+  }
+  .formula{
+    font-family:"IBM Plex Mono";
+    font-size: .98rem;
+    text-align:center;
+    padding: .3rem 0;
+  }
+
+  /* inline fraction */
+  .frac{
+    display:inline-flex;
+    flex-direction:column;
+    vertical-align:middle;
+    text-align:center;
+    line-height:1.15;
+    margin: 0 .2em;
+    font-size: .95em;
+    position: relative;
+    top: .15em;
+  }
+  .frac .num{ padding: 0 .25em .1em; border-bottom: 1.4px solid currentColor; }
+  .frac .den{ padding: .1em .25em 0; }
+
+  /* ---- callouts ---- */
+  .callout{
+    border-left: 3px solid var(--rule);
+    background: var(--paper-2);
+    border-radius: 0 8px 8px 0;
+    padding: .85rem 1.1rem;
+    margin: 1rem 0;
+    max-width: 68ch;
+  }
+  .callout .callout-label{
+    font-family:"IBM Plex Mono";
+    font-size: .68rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: .3rem;
+  }
+  .callout p, .callout ul{ margin: 0; max-width: none; }
+  .callout ul{ margin-top:.4rem; }
+  .callout.warn{ border-left-color: var(--red); background: var(--red-soft); }
+  .callout.warn .callout-label{ color: var(--red); }
+  .callout.verified{ border-left-color: var(--green); background: var(--green-soft); }
+  .callout.verified .callout-label{ color: var(--green); }
+  .callout.note{ border-left-color: var(--blue); background: var(--blue-soft); }
+  .callout.note .callout-label{ color: var(--blue); }
+
+  .table-wrap{ overflow-x:auto; margin:1rem 0; }
+  section.topic table{ width:100%; border-collapse:collapse; font-size:.88rem; }
+  section.topic th, section.topic td{ text-align:left; padding:.45rem .65rem; border-bottom:1px solid var(--rule); vertical-align:top; }
+  section.topic thead th{ font-family:"IBM Plex Mono"; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-muted); border-bottom:1px solid var(--ink-muted); }
+  section.topic td code, section.topic th code{ white-space:nowrap; }
+
+  .stub{
+    font-family:"IBM Plex Mono";
+    font-size: .85rem;
+    color: var(--ink-muted);
+    border: 1px dashed var(--rule);
+    border-radius: 8px;
+    padding: .9rem 1.1rem;
+    max-width: 68ch;
+  }
+
+  footer{
+    grid-column: 1/-1;
+    border-top: 1px solid var(--rule);
+    margin-top: 1.5rem;
+    padding-top: 1.2rem;
+    font-family:"IBM Plex Mono";
+    font-size: .74rem;
+    color: var(--ink-muted);
+  }
+
+  @media (max-width: 860px){
+    .shell{ grid-template-columns: 1fr; padding: 1.6rem 1.1rem 4rem; }
+    nav.toc{ position: static; border-bottom: 1px solid var(--rule); padding-bottom: 1.2rem; margin-bottom: .5rem; }
+    nav.toc .toc-group{ margin-bottom: 1rem; }
+    .masthead{ align-items:flex-start; }
+    .masthead .meta{ text-align:left; }
+  }
+
+  a:focus-visible, summary:focus-visible{
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+  }
+</style>
+
+<div class="shell">
+
+  <header class="masthead">
+    <div>
+      <div class="eyebrow">Métodos Numéricos · 2026</div>
+      <h1>Apuntes de Métodos Numéricos</h1>
+    </div>
+    <div class="meta">
+      Teoría + errores de implementación<br>
+      reales, encontrados a la fuerza.<br>
+      Se va completando en cada clase.
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Índice">
+    <div class="toc-group">
+      <div class="toc-heading">Localización de raíces</div>
+      <ul>
+        <li><a href="#biseccion">Bisección</a></li>
+        <li><a href="#falsa-posicion">Falsa posición</a></li>
+        <li><a href="#punto-fijo">Punto fijo</a></li>
+        <li><a href="#newton">Newton-Raphson</a></li>
+        <li><a href="#secante">Secante</a></li>
+        <li><a href="#raiz-nesima">Raíz n-ésima</a></li>
+        <li><a href="#plantear-f">Plantear f(x)=0 (aplicaciones)</a></li>
+      </ul>
+    </div>
+    <div class="toc-group">
+      <div class="toc-heading">Sistemas lineales</div>
+      <ul>
+        <li><a href="#gauss">Eliminación gaussiana</a></li>
+        <li><a href="#jacobi">Jacobi</a></li>
+        <li><a href="#gauss-seidel">Gauss-Seidel</a></li>
+      </ul>
+    </div>
+    <div class="toc-group">
+      <div class="toc-heading">Interpolación</div>
+      <ul>
+        <li><a href="#lagrange">Lagrange</a></li>
+        <li><a href="#coeficientes-indeterminados">Coeficientes indeterminados</a></li>
+        <li><a href="#verificar-interpolacion">Cómo verificar el resultado</a></li>
+      </ul>
+    </div>
+    <div class="toc-group">
+      <div class="toc-heading">Ajuste de curvas</div>
+      <ul>
+        <li><a href="#regresion-lineal">Regresión lineal</a></li>
+        <li><a href="#coeficiente-correlacion">Coeficiente de correlación</a></li>
+        <li><a href="#regresion-arbitraria">Funciones arbitrarias</a></li>
+        <li><a href="#regresion-polinomica">Regresión polinómica</a></li>
+      </ul>
+    </div>
+    <div class="toc-group">
+      <div class="toc-heading">Transversal</div>
+      <ul>
+        <li><a href="#guia-programas">Guía de programas (cuál usar)</a></li>
+        <li><a href="#tipos-de-error">Tipos de error (estimado vs. exacto)</a></li>
+        <li><a href="#errores-comunes">Errores recurrentes en C++</a></li>
+      </ul>
+    </div>
+    <div class="status">Guía de programas agregada (parcial modelo) — hasta acá entra el primer parcial.</div>
+  </nav>
+
+  <main>
+    <p class="intro">
+      Resumen propio de la materia, ordenado por tema. Cada sección tiene la teoría base,
+      el pseudocódigo o la fórmula tal como la vimos, y — lo más útil a la hora de programar —
+      los errores concretos que fuimos pisando al pasar el pseudocódigo a C++. Se va a ir
+      completando a medida que avancemos con dudas nuevas y temas nuevos.
+    </p>
+
+    <!-- ===================== CAPÍTULO 1 ===================== -->
+    <div class="chapter">
+      <div class="chapter-label">Capítulo 1 — Localización de raíces</div>
+
+      <section class="topic" id="biseccion">
+        <h2>Bisección <span class="tag">método cerrado</span></h2>
+        <p>
+          Parte de un intervalo <code>[a,b]</code> donde <code>f(a)·f(b) &lt; 0</code>
+          (cambio de signo → por Bolzano hay una raíz adentro). En cada paso se calcula el
+          punto medio y se descarta la mitad del intervalo que no cambia de signo.
+        </p>
+
+        <div class="panel">
+          <div class="panel-label">Pseudocódigo</div>
+          <pre class="pseudo">hacer:
+    c = (a + b) / 2
+    si f(c) == 0 → raíz exacta, listo
+    si f(a)·f(c) &lt; 0 → b = c
+    si no        → a = c
+mientras (error &gt; tolerancia) Y (iter &lt; max_iter)</pre>
+        </div>
+
+        <h3>Ejemplo paso a paso: primera iteración a mano</h3>
+        <p>
+          <code>f(x) = (x+1)/(x+4) − 0.25x</code>, intervalo <code>[a,b]=[1.75, 3.2]</code>
+          (acá <code>c_viejo</code> arranca en <code>b</code>, no en <code>a</code> — así lo pedía
+          este enunciado puntual, revisar siempre qué pide el criterio de error de cada ejercicio).
+        </p>
+        <div class="panel">
+          <pre class="pseudo">c = (a+b)/2 = (1.75+3.2)/2 = 2.4750000000
+
+f(a) = f(1.75)  =  0.0407608696
+f(c) = f(2.475) = -0.0820704633
+f(a)·f(c) &lt; 0   →   la raíz está entre a y c   →   b = c
+
+error = |c − c_viejo| / (½·|c + c_viejo|) × 100        (c_viejo = b = 3.2)
+      = |2.475 − 3.2| / (½·|2.475 + 3.2|) × 100
+      = 0.725 / 2.8375 × 100
+      = 25.5506607930 %
+
+Nuevo intervalo: [1.75, 2.475]</pre>
+        </div>
+
+        <h3>Cuántas iteraciones hacen falta (Problema 4)</h3>
+        <p>
+          Cada bisección acota el error con <code>|r − c| ≤ (b−a)/2</code> sobre el intervalo
+          vigente. Como el intervalo se parte a la mitad en cada paso, después de <code>n</code>
+          bisecciones sucesivas:
+        </p>
+        <div class="panel">
+          <div class="formula">
+            |r − c<sub>n</sub>|&nbsp;≤&nbsp;<span class="frac"><span class="num">b − a</span><span class="den">2<sup>n</sup></span></span>
+          </div>
+        </div>
+        <p>Pidiendo que ese error sea menor que un <code>δ</code> elegido y despejando <code>n</code>:</p>
+        <div class="panel">
+          <div class="formula">
+            n&nbsp;=&nbsp;⌈&nbsp;log<sub>2</sub>( (b−a) / δ )&nbsp;⌉
+            &nbsp;=&nbsp;⌈&nbsp;<span class="frac"><span class="num">ln((b−a)/δ)</span><span class="den">ln 2</span></span>&nbsp;⌉
+          </div>
+        </div>
+        <p>Se redondea siempre <strong>hacia arriba</strong> (ceiling), porque <code>n</code> tiene que ser entero y la desigualdad se tiene que seguir cumpliendo.</p>
+
+        <div class="callout verified">
+          <div class="callout-label">Verificado con datos reales</div>
+          <p>
+            [0,1], δ=1e-4 → n=⌈13.29⌉=14 iteraciones. [60,65], δ=1e-5 → n=⌈18.93⌉=19 iteraciones.
+            Las dos coinciden exactamente con lo que tardó el programa corriendo de verdad.
+          </p>
+        </div>
+
+        <div class="callout warn">
+          <div class="callout-label">Atención al programar</div>
+          <ul>
+            <li><code>c_viejo</code> tiene que inicializarse (<code>c_viejo = a</code>) <em>antes</em> del loop. Si no, el primer <code>error = |c − c_viejo|</code> usa memoria basura.</li>
+            <li>La condición del <code>do-while</code> es <code>&&</code>, no <code>||</code>: "seguir mientras no convergió <strong>y</strong> no me pasé del máximo". Con <code>||</code> el tope de iteraciones queda anulado — riesgo de loop infinito si el método no converge.</li>
+            <li>Si el intervalo es simétrico y la raíz cae justo en el punto medio (ej. <code>a¹⁰−1</code> en [0,2], raíz=1), bisección puede converger en <strong>1 sola</strong> iteración. Es correcto, pero no es representativo del caso general — no sirve para comparar velocidades de convergencia.</li>
+          </ul>
+        </div>
+
+        <div class="callout note">
+          <div class="callout-label">Elegir bien el intervalo: cuidado con raíces espurias</div>
+          <p>
+            Cuando la ecuación sale de despejar/manipular otra ecuación original (pasar una fracción
+            a la forma <code>f(x)=0</code>, por ejemplo), a veces aparecen raíces "triviales" que
+            matemáticamente cierran pero no tienen sentido físico. Antes de elegir <code>[a,b]</code>,
+            conviene graficar la función completa y armar el intervalo para que aísle <strong>solo</strong>
+            la raíz que buscás.
+          </p>
+          <p style="margin-top:.5rem;">
+            <strong>Caso real (Problema 5, ciclo termodinámico):</strong> despejando <code>η(x)=0.3</code>
+            con <code>x=T₂/T₁</code> se llega a <code>(1.45/0.7)·(1−1/x) − ln(x) = 0</code>. Esa función
+            tiene una raíz espuria en <code>x≈1</code> (ahí <code>T₂=T₁</code>, no hay ciclo real —
+            numerador y denominador de η se anulan juntos) y la raíz física de interés bastante más
+            lejos, en <code>x≈5.41</code>. Usar <code>[4,6]</code> como intervalo evita agarrar la de
+            <code>x=1</code> por accidente.
+          </p>
+        </div>
+      </section>
+
+      <section class="topic" id="falsa-posicion">
+        <h2>Falsa posición <span class="tag">método cerrado</span></h2>
+        <p>
+          También parte de <code>[a,b]</code> con cambio de signo, pero en vez de partir al medio,
+          traza la recta secante entre <code>(a,f(a))</code> y <code>(b,f(b))</code> y usa el
+          cruce con el eje x como aproximación:
+        </p>
+        <div class="panel">
+          <div class="formula">
+            c&nbsp;=&nbsp;<span class="frac"><span class="num">a·f(b) − b·f(a)</span><span class="den">f(b) − f(a)</span></span>
+          </div>
+        </div>
+        <p>Actualiza <code>a</code> o <code>b</code> igual que bisección, según el signo de <code>f(a)·f(c)</code>.</p>
+
+        <h3>Ejemplo paso a paso: primera iteración a mano</h3>
+        <p>
+          <code>f(x) = ln(x²+1) − sen(x)</code>, intervalo <code>[a,b]=[1, 2]</code> (cambio de
+          signo: <code>f(1)&lt;0</code>, <code>f(2)&gt;0</code>).
+        </p>
+        <div class="panel">
+          <pre class="pseudo">f(1) = ln(2) - sen(1) = -0.1483238042
+f(2) = ln(5) - sen(2) =  0.7001404856
+
+c = (a·f(b) − b·f(a)) / (f(b) − f(a))
+  = (1·0.7001404856 − 2·(−0.1483238042)) / (0.7001404856 − (−0.1483238042))
+  = 0.9967880940 / 0.8484642898
+  = 1.1748144336
+
+f(c) = f(1.1748144336) = -0.0554384022
+f(a)·f(c) &gt; 0  (los dos negativos)   →   a = c
+
+Nuevo intervalo: [1.1748144336, 2]</pre>
+        </div>
+
+        <div class="callout warn">
+          <div class="callout-label">No siempre es más rápida que bisección</div>
+          <p>
+            Cuando la función es muy asimétrica en curvatura cerca de la raíz, un extremo del
+            intervalo se puede quedar "pegado" y casi no avanza — convergencia lineal muy lenta.
+            Caso real: <code>g(a)=a¹⁰−1</code> en [0,2] necesitó <strong>1147 iteraciones</strong>
+            (bisección hizo 1, por el caso particular de arriba). Moraleja: no asumir que un
+            método "más inteligente" siempre gana — depende de la forma de la función.
+          </p>
+        </div>
+
+        <div class="callout warn">
+          <div class="callout-label">Mismos cuidados de implementación que bisección</div>
+          <p>
+            <code>c_viejo = a</code> antes del loop, condición <code>&&</code> en el <code>while</code>,
+            y ojo con el <code>max_iter</code>: si es muy chico, puede cortar el método antes de que
+            termine de converger (no es que esté "trabado", solo hace falta más margen).
+          </p>
+        </div>
+      </section>
+
+      <section class="topic" id="punto-fijo">
+        <h2>Punto fijo <span class="tag">método abierto</span></h2>
+        <p>
+          Se reescribe <code>f(x)=0</code> como <code>x = g(x)</code> y se itera
+          <code>x<sub>k+1</sub> = g(x<sub>k</sub>)</code> a partir de una única semilla <code>x₀</code>.
+        </p>
+        <div class="panel">
+          <div class="panel-label">Condición de convergencia</div>
+          <div class="formula">|g'(x)| &lt; 1&nbsp; cerca de la raíz</div>
+        </div>
+        <div class="callout note">
+          <div class="callout-label">Nota</div>
+          <p>
+            Chequear <code>g'</code> una sola vez en <code>x₀</code> (con diferencia finita,
+            <code>(g(x₀+h)−g(x₀))/h</code>) es una simplificación razonable, pero solo es una
+            pista inicial — no garantiza que <code>|g'|&lt;1</code> se mantenga en todo el
+            recorrido de la iteración.
+          </p>
+        </div>
+
+        <h3>Ejemplo paso a paso: primera iteración a mano</h3>
+        <p><code>g(x) = √((x+5)/2)</code>, semilla <code>x₀ = 0</code>.</p>
+        <div class="panel">
+          <pre class="pseudo">g'(x) = 1 / (4·g(x))     (regla de la cadena sobre g(x)=((x+5)/2)^(1/2))
+
+g(0)  = √(5/2) = 1.5811388301
+g'(0) = 1 / (4·1.5811388301) = 0.1581138830
+
+|g'(0)| = 0.1581138830  &lt;  1     →   se cumple el criterio, converge
+
+x1 = g(x0) = g(0) = 1.5811388301
+error = |x1 − x0| = 1.5811388301</pre>
+        </div>
+
+        <h3>Cuándo NO converge (ejemplo real)</h3>
+        <p>
+          Ojo con la diferencia entre <strong>puntos fijos de g</strong> (resolver <code>x=g(x)</code>)
+          y <strong>raíces de g</strong> (resolver <code>g(x)=0</code>) — son ecuaciones distintas,
+          es fácil despejar de una pensando en la otra.
+        </p>
+        <p>
+          Con <code>g(x)=x²+x−4</code>, la ecuación <code>x=g(x)</code> da <code>x²−4=0</code>, o
+          sea puntos fijos <code>P=2</code> y <code>P=−2</code>. Con <code>g'(x)=2x+1</code>:
+        </p>
+        <div class="panel">
+          <div class="formula">g'(2) = 5&nbsp;&nbsp;&nbsp;&nbsp;g'(−2) = −3</div>
+        </div>
+        <p><code>|g'(P)|</code> da mayor que 1 en <strong>los dos</strong> puntos fijos → la iteración directa <code>x<sub>k+1</sub>=g(x<sub>k</sub>)</code> diverge, sin importar qué tan cerca arranque la semilla:</p>
+        <div class="panel">
+          <div class="panel-label">Simulación arrancando en x₀=2.01 (a 0.01 del punto fijo)</div>
+          <pre class="pseudo">x0 = 2.010000
+x1 = 2.050100
+x2 = 2.253010
+x3 = 3.329064
+x4 = 10.411732
+x5 = 114.815895   ← se va al horno</pre>
+        </div>
+        <div class="callout warn">
+          <div class="callout-label">Trampa común</div>
+          <p>
+            Despejar <code>x</code> de otra forma (ej. <code>x=4−x²</code>) puede parecer una
+            alternativa, pero eso despeja <code>g(x)=0</code> (sus raíces, ≈1.56 y ≈−2.56), <strong>no</strong>
+            los puntos fijos de <code>x=g(x)</code>. Es una ecuación distinta — y en este caso
+            tampoco converge (<code>φ'(x)=−2x</code>, también mayor que 1 en esas raíces).
+          </p>
+        </div>
+
+        <h3>La ventaja de g'(P) ≈ 0: de convergencia lineal a cuadrática</h3>
+        <p>
+          Reacomodando la <em>misma</em> ecuación <code>x²=4</code> de otra forma —
+          <code>ψ(x) = (x + 4/x)/2</code> (el promedio; matemáticamente es Newton-Raphson aplicado
+          a <code>x²−4=0</code>) — la derivada da:
+        </p>
+        <div class="panel">
+          <div class="formula">ψ'(x) = 1/2 − 2/x²&nbsp;&nbsp;&nbsp;&nbsp;ψ'(2) = 0&nbsp;&nbsp;&nbsp;&nbsp;ψ'(−2) = 0</div>
+        </div>
+        <div class="panel">
+          <div class="panel-label">Convergencia arrancando en x₀=3 (lejos del punto fijo)</div>
+          <pre class="pseudo">x0 = 3.0000000000
+x1 = 2.1666666667
+x2 = 2.0064102564
+x3 = 2.0000102400
+x4 = 2.0000000000   ← precisión de máquina en 4 pasos</pre>
+        </div>
+        <div class="callout verified">
+          <div class="callout-label">Conclusión</div>
+          <p>
+            Cuando <code>0 &lt; |g'(P)| &lt; 1</code>, converge pero <strong>linealmente</strong>
+            (el error se reduce por un factor ≈<code>|g'(P)|</code> en cada paso). Cuando
+            <code>g'(P) ≈ 0</code>, pasa a converger <strong>cuadráticamente</strong> — el error
+            se eleva al cuadrado en cada paso en vez de multiplicarse por una constante. Es la
+            misma razón por la que Newton-Raphson converge tan rápido: NR <em>es</em> una
+            iteración de punto fijo con <code>φ(x)=x−f(x)/f'(x)</code>, y en una raíz simple
+            siempre da <code>φ'(P)=0</code>.
+          </p>
+        </div>
+      </section>
+
+      <section class="topic" id="newton">
+        <h2>Newton-Raphson <span class="tag">método abierto</span></h2>
+        <div class="panel">
+          <div class="formula">
+            x<sub>k+1</sub>&nbsp;=&nbsp;x<sub>k</sub>&nbsp;−&nbsp;<span class="frac"><span class="num">f(x<sub>k</sub>)</span><span class="den">f'(x<sub>k</sub>)</span></span>
+          </div>
+        </div>
+        <p>
+          Converge cuadráticamente (mucho más rápido que los métodos cerrados) cuando converge,
+          pero necesita la derivada analítica y una buena semilla.
+        </p>
+        <div class="callout warn">
+          <div class="callout-label">Atención</div>
+          <p>Revisar que <code>|f'(x<sub>k</sub>)|</code> no sea ~0 antes de dividir — si no, el paso explota o se vuelve inestable.</p>
+        </div>
+
+        <h3>Ejemplo paso a paso: primera iteración a mano</h3>
+        <p><code>f(x) = x<sup>x</sup> − 5</code>, <code>f'(x) = x<sup>x</sup>·(ln(x)+1)</code>, semilla <code>x₀=1</code>.</p>
+        <div class="panel">
+          <pre class="pseudo">f(1)  = 1^1 - 5 = -4
+f'(1) = 1^1·(ln(1)+1) = 1·(0+1) = 1
+
+x1 = x0 − f(x0)/f'(x0) = 1 − (−4)/1 = 5
+
+error = |x1 − x0| = |5 − 1| = 4</pre>
+        </div>
+      </section>
+
+      <section class="topic" id="secante">
+        <h2>Secante <span class="tag">método abierto</span></h2>
+        <p>Igual que Newton, pero aproxima la derivada con diferencia finita entre los dos últimos puntos — no hace falta la derivada analítica, pero se necesitan 2 semillas.</p>
+        <div class="panel">
+          <div class="formula">
+            x<sub>k+1</sub>&nbsp;=&nbsp;x<sub>k</sub>&nbsp;−&nbsp;<span class="frac"><span class="num">f(x<sub>k</sub>)·(x<sub>k</sub> − x<sub>k−1</sub>)</span><span class="den">f(x<sub>k</sub>) − f(x<sub>k−1</sub>)</span></span>
+          </div>
+        </div>
+        <div class="callout warn">
+          <div class="callout-label">Atención</div>
+          <p>Revisar que <code>f(x<sub>k</sub>) − f(x<sub>k−1</sub>)</code> no sea ~0 antes de dividir.</p>
+        </div>
+
+        <h3>Ejemplo paso a paso: primera iteración a mano</h3>
+        <p><code>f(x) = x² − 9x + 2</code>, semillas <code>x₀=0, x₁=1</code>.</p>
+        <div class="panel">
+          <pre class="pseudo">f(x0) = f(0) = 0 - 0 + 2 =  2
+f(x1) = f(1) = 1 - 9 + 2 = -6
+
+x2 = x1 − f(x1)·(x1−x0) / (f(x1)−f(x0))
+   = 1 − (−6)·(1−0) / (−6−2)
+   = 1 − (−6)/(−8)
+   = 1 − 0.75
+   = 0.25
+
+error = |x2 − x1| = |0.25 − 1| = 0.75</pre>
+        </div>
+      </section>
+
+      <section class="topic" id="raiz-nesima">
+        <h2>Raíz n-ésima <span class="tag">Newton-Raphson especializado</span></h2>
+        <p>
+          Newton-Raphson aplicado directo a <code>f(x) = x<sup>n</sup> − A</code> (buscar la raíz
+          n-ésima de <code>A</code>) se simplifica a una fórmula cerrada — no hace falta calcular
+          <code>f</code> ni <code>f'</code> por separado en cada paso.
+        </p>
+        <div class="panel">
+          <div class="panel-label">n=2 (raíz cuadrada)</div>
+          <div class="formula">p<sub>k</sub> = ½·(p<sub>k−1</sub> + A/p<sub>k−1</sub>)</div>
+        </div>
+        <div class="panel">
+          <div class="panel-label">n=3 (raíz cúbica)</div>
+          <div class="formula">p<sub>k</sub> = (2·p<sub>k−1</sub> + A/p<sub>k−1</sub>²) / 3</div>
+        </div>
+
+        <h3>Ejemplo paso a paso: primera iteración a mano</h3>
+        <p><code>A=10</code>, <code>n=2</code> (raíz cuadrada de 10), semilla <code>p₀=3</code>.</p>
+        <div class="panel">
+          <pre class="pseudo">p1 = 0.5·(p0 + A/p0)
+   = 0.5·(3 + 10/3)
+   = 0.5·6.3333333333
+   = 3.1666666667
+
+error = |p1 − p0| = 0.1666666667
+
+(valor exacto: √10 = 3.1622776602 — a una sola iteración ya está a 0.0044 de distancia)</pre>
+        </div>
+      </section>
+
+      <section class="topic" id="plantear-f" style="border-bottom:none; padding-bottom:0;">
+        <h2>Plantear f(x)=0 a partir de un problema</h2>
+        <p>
+          A veces no te dan la ecuación servida — hay que armarla a partir de la geometría o la
+          física del enunciado. Tres ejemplos reales donde hubo que derivarla desde cero.
+        </p>
+
+        <h3>Contenedor sin tapa (recortar esquinas)</h3>
+        <p>
+          De una hoja de <code>10×16</code>, se recorta un cuadrado de lado <code>x</code> en cada
+          esquina y se doblan los bordes: queda una caja sin tapa con
+          <code>altura=x</code>, <code>largo=16−2x</code>, <code>ancho=10−2x</code>.
+          Volumen: <code>V(x) = x(16−2x)(10−2x)</code>. Igualando a un volumen pedido y desarrollando:
+        </p>
+        <div class="panel">
+          <div class="formula">x(16−2x)(10−2x) = 100&nbsp;&nbsp;→&nbsp;&nbsp;f(x) = x³ − 13x² + 40x − 25 = 0</div>
+        </div>
+        <div class="callout verified">
+          <div class="callout-label">Filtro físico</div>
+          <p>
+            3 raíces matemáticas: <code>0.839</code>, <code>3.402</code>, <code>8.759</code>. Como
+            hace falta <code>10−2x&gt;0</code>, el dominio válido es <code>0&lt;x&lt;5</code> — la
+            raíz <code>8.759</code> queda afuera (da ancho negativo). Dos soluciones físicamente
+            válidas: <code>x≈0.839</code> y <code>x≈3.402</code>.
+          </p>
+        </div>
+
+        <h3>Catenaria (cable colgante)</h3>
+        <p>El enunciado ya da la ecuación <code>b = C·cosh(a/C) − C</code> (incógnita <code>C</code>), solo hay que pasarla a la forma <code>f(C)=0</code>:</p>
+        <div class="panel">
+          <div class="formula">f(C) = C·cosh(a/C) − C − b = 0</div>
+        </div>
+        <div class="callout verified">
+          <div class="callout-label">Verificado</div>
+          <p>Con <code>a=12, b=5</code>: <code>C ≈ 15.167028341664</code>.</p>
+        </div>
+
+        <h3>Esfera flotando (principio de Arquímedes)</h3>
+        <p>Acá no viene ninguna ecuación en el enunciado — sale de igualar el peso de la esfera con el peso del agua desplazada (densidad del agua = 1 gr/cm³):</p>
+        <div class="panel">
+          <div class="panel-label">Volumen del casquete esférico sumergido, altura d, esfera de radio r</div>
+          <div class="formula">V<sub>casquete</sub>(d) = <span class="frac"><span class="num">π·d²</span><span class="den">3</span></span>·(3r − d)</div>
+        </div>
+        <div class="panel">
+          <div class="formula">
+            ρ·<span class="frac"><span class="num">4</span><span class="den">3</span></span>πr³&nbsp;=&nbsp;<span class="frac"><span class="num">π·d²</span><span class="den">3</span></span>(3r−d)
+            &nbsp;&nbsp;→&nbsp;&nbsp;f(d) = d³ − 3r·d² + 4ρr³ = 0
+          </div>
+        </div>
+        <div class="callout verified">
+          <div class="callout-label">Verificado</div>
+          <p>
+            Con <code>r=10, ρ=0.638</code>: <code>f(d)=d³−30d²+2552=0</code>. Raíces:
+            <code>26.31</code>, <code>11.86</code>, <code>−8.18</code>. Filtro físico:
+            <code>0&lt;d&lt;2r=20</code> (la profundidad sumergida no puede superar el diámetro) →
+            única válida: <code>d ≈ 11.8615 cm</code>.
+          </p>
+        </div>
+
+        <div class="callout note">
+          <div class="callout-label">El patrón se repite</div>
+          <p>
+            Mismo tema que en el Problema 5 de bisección (el ciclo termodinámico, más arriba):
+            plantear la ecuación no alcanza — casi siempre hay que <strong>filtrar</strong> las
+            soluciones matemáticas según el dominio físico real de la variable (un ancho no puede
+            ser negativo, una profundidad no puede superar el diámetro, etc.). Conviene siempre
+            preguntarse qué rango tiene sentido <em>antes</em> de mirar las raíces.
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================== CAPÍTULO 2 ===================== -->
+    <div class="chapter">
+      <div class="chapter-label">Capítulo 2 — Sistemas de ecuaciones lineales <span class="tag">completo</span></div>
+
+      <section class="topic" id="gauss">
+        <h2>Eliminación gaussiana</h2>
+        <h3>Triangulación</h3>
+        <div class="panel">
+          <div class="panel-label">Pseudocódigo (1-indexado, como lo da la profesora)</div>
+          <pre class="pseudo">Do i = 1,...,n-1        ← Pivoteo
+  Do j = i+1,...,n
+    factor = -a_ji / a_ii
+    Do k = i+1,...,n
+      a_jk = a_ik·factor + a_jk
+    end Do
+    b_j = b_i·factor + b_j
+  end Do
+end Do</pre>
+        </div>
+        <h3>Determinante</h3>
+        <p>Producto de la diagonal ya triangulada: <code>det = a₁₁·a₂₂·…·aₙₙ</code>. Si <code>det = 0</code> → matriz singular, no tiene solución única.</p>
+        <h3>Retrosustitución</h3>
+        <div class="panel">
+          <div class="formula">
+            x<sub>i</sub>&nbsp;=&nbsp;<span class="frac"><span class="num">b<sub>i</sub> − Σ<sub>j&gt;i</sub> a<sub>ij</sub>·x<sub>j</sub></span><span class="den">a<sub>ii</sub></span></span>
+            &nbsp;&nbsp;(empezando por x<sub>n</sub> y bajando hasta x₁)
+          </div>
+        </div>
+
+        <div class="callout warn">
+          <div class="callout-label">El error que más se repite en todo el curso</div>
+          <p>
+            El pseudocódigo de la profesora es <strong>1-indexado</strong> (arranca en 1, <code>a₁₁</code>
+            es el primer elemento). Los arrays de C++ son <strong>0-indexados</strong>. Hay que correr
+            los puntos de <em>arranque</em> de los loops un lugar (<code>i=1→i=0</code>, <code>i=2→i=1</code>,
+            <code>a[1][1]→a[0][0]</code>) — pero ojo: los límites superiores (<code>i&lt;n-1</code>,
+            <code>j&lt;n</code>, etc.) casi siempre ya quedan bien escritos tal cual, sin tocar nada.
+          </p>
+        </div>
+
+        <h3>Interpolación polinómica = sistema de Vandermonde</h3>
+        <p>
+          "Encontrar el polinomio <code>y=A+Bx+Cx²+Dx³</code> que pasa por 4 puntos dados" no es
+          un tema aparte — es una aplicación directa de resolver un sistema lineal. Por cada punto
+          <code>(x_i, y_i)</code> conocido, se arma una ecuación evaluando el polinomio genérico
+          ahí: <code>A + B·x_i + C·x_i² + D·x_i³ = y_i</code>. Con 4 puntos, quedan 4 ecuaciones
+          para las 4 incógnitas <code>A,B,C,D</code> — se resuelve con Gauss/Gauss-Jordan como
+          cualquier otro sistema. La matriz que se arma (filas <code>[1, x_i, x_i², x_i³]</code>)
+          se llama <strong>matriz de Vandermonde</strong>.
+        </p>
+        <div class="callout warn">
+          <div class="callout-label">Trampa: el coeficiente de A siempre es 1</div>
+          <p>
+            El coeficiente de <code>A</code> en cada fila es <strong>siempre 1</strong>, sin
+            importar el valor de <code>x_i</code> — ni siquiera se anula en <code>x_i=0</code>
+            (lo que se anula ahí son los términos <code>Bx</code>, <code>Cx²</code>, <code>Dx³</code>,
+            no el de <code>A</code>, que no depende de <code>x</code>). Un error común es poner
+            <code>0</code> en esa columna para las filas donde no es el punto "especial" —
+            eso arma mal el sistema.
+          </p>
+          <p style="margin-top:.5rem;">
+            Lo traicionero: si el punto <code>(0,y₀)</code> tiene <code>y₀=0</code>, la solución
+            para <code>A</code> da <code>0</code>, y ahí <code>0·A</code> y <code>1·A</code> dan
+            lo mismo (cero) — el error queda "tapado" y el resultado sale bien por casualidad.
+            Si <code>A</code> hubiese dado cualquier otro valor, el error sí cambia la respuesta
+            (lo comprobamos forzando <code>A=5</code>: con el `0` mal puesto daba
+            <code>B,C,D = -0.167, 1.5, -0.333</code>; con la matriz bien armada daba
+            <code>-9.33, 6.5, -1.17</code> — completamente distinto).
+          </p>
+        </div>
+
+        <h3>Pivoteo parcial</h3>
+        <p>Si <code>|a_ii|</code> da muy chico, buscar en esa columna la fila con mayor valor absoluto y swapear filas (y también <code>b</code>) antes de seguir.</p>
+        <div class="callout warn">
+          <div class="callout-label">Dos bugs reales encontrados acá</div>
+          <ul>
+            <li>Guardar el <strong>valor absoluto</strong> (<code>fabs(...)</code>) al comparar y al actualizar el "mayor valor" — si se guarda el valor con signo, un negativo grande puede perder la comparación contra un positivo chico.</li>
+            <li>Al swapear dos filas, mover <strong>todas</strong> las columnas (de <code>0</code> a <code>n-1</code>) — arrancar el loop del swap en <code>1</code> en vez de <code>0</code> deja la columna 0 sin intercambiar (mismo error de indexado de arriba, escondido en otro lado del código).</li>
+          </ul>
+        </div>
+
+        <h3>Gauss vs. Gauss-Jordan</h3>
+        <p>
+          Dan siempre el mismo resultado (verificado) — la diferencia es cuánto se triangula:
+        </p>
+        <ul>
+          <li><strong>Gauss:</strong> ceros solo por debajo de la diagonal, después retrosustitución (despejar desde <code>x_n</code> hacia atrás).</li>
+          <li><strong>Gauss-Jordan:</strong> además elimina por <strong>encima</strong> de la diagonal (columna pivote de atrás para adelante) y normaliza cada fila — queda <code>[I|x]</code>, se lee la solución directo, sin retrosustitución. Hace más cuentas que Gauss (~50% más), pero si el enunciado pide Gauss-Jordan específicamente, hay que mostrar esa eliminación extra, no alcanza con el resultado triangulado + retrosustitución.</li>
+        </ul>
+        <div class="callout warn">
+          <div class="callout-label">Cuidado con el determinante en Gauss-Jordan</div>
+          <p>
+            El determinante hay que calcularlo <strong>apenas termina la triangulación hacia
+            abajo</strong> (producto de la diagonal), antes de normalizar filas. Si se normaliza
+            primero (dividir cada fila por su pivote para dejar la diagonal en 1) y se calcula el
+            determinante después, va a dar siempre <code>1</code> — mal.
+          </p>
+        </div>
+
+        <div class="callout warn">
+          <div class="callout-label">Otro cuidado con el determinante: el signo cambia con cada swap</div>
+          <p>
+            Cada vez que el pivoteo intercambia dos filas de verdad, el signo del determinante
+            real se invierte — si no se compensa, el producto de la diagonal final da el
+            <strong>valor absoluto correcto pero el signo equivocado</strong> cuando hubo una
+            cantidad impar de swaps. Se arregla con una variable <code>signoDet</code> (arranca en
+            <code>1</code>, se multiplica por <code>-1</code> en cada intercambio real) que
+            multiplica al producto de la diagonal.
+          </p>
+          <p style="margin-top:.5rem;">
+            Este bug estuvo escondido varios ejercicios: como los sistemas anteriores no
+            necesitaban pivotear de verdad, el código daba bien "por accidente". Recién se destapó
+            en un ejercicio que <em>obligaba</em> a pivotear (enunciado: <code>a11=4, a22</code>
+            queda en 0 después de triangular, hace falta swap) — el determinante daba <code>-4</code>
+            en vez de <code>+4</code>. Buena lección general: un bug en una rama de código que
+            nunca se ejecuta no se nota hasta que un caso de prueba fuerza justo esa rama.
+          </p>
+        </div>
+        <h3>Matrices mal condicionadas</h3>
+        <p>
+          A veces el sistema en sí es "frágil": un cambio mínimo en un dato de entrada produce un
+          cambio enorme en la solución. Se detecta comparando el determinante contra la
+          <strong>norma de Frobenius</strong> de la matriz:
+        </p>
+        <div class="panel">
+          <div class="formula">
+            ‖A‖ = √( Σ<sub>i=1</sub><sup>n</sup> Σ<sub>j=1</sub><sup>n</sup> A<sub>ij</sub>² )
+          </div>
+        </div>
+        <p>
+          Si <code>det(A)</code> da chico <strong>comparado con</strong> <code>‖A‖</code>, la matriz
+          es "cuasi-singular" — mal condicionada. No hay un umbral fijo, es una comparación de
+          órdenes de magnitud.
+        </p>
+        <div class="callout verified">
+          <div class="callout-label">Caso real — sistema de interpolación con matriz mal condicionada</div>
+          <p>Cambiando <strong>una sola celda</strong> de la matriz (<code>A₁,₁</code>) apenas un 0.005% (<code>20514→20515</code>), sin tocar nada más:</p>
+          <div class="panel" style="margin:.6rem 0 0;">
+            <pre class="pseudo">                c1,c2,c3,c4                          det(A)   ||A||
+original:       1, 0, 0, 0                            144    21518.5
+A11=20515:      0.642857, 3.75, -12.3929, 12.75        224    21519.5</pre>
+          </div>
+          <p style="margin-top:.5rem;">
+            <code>‖A‖</code> casi no se movió, pero <code>det(A)</code> cambió un 55% y la solución
+            cambió por completo. Esa sensibilidad extrema a una perturbación mínima es justamente
+            la señal de que la matriz está mal condicionada — el determinante es insignificante
+            comparado con la norma.
+          </p>
+        </div>
+        <div class="callout warn">
+          <div class="callout-label">Ojo al calcular ‖A‖ en el código</div>
+          <p>
+            Hay que calcularla con la matriz <strong>original</strong>, antes de triangular —
+            <code>triangular()</code> pisa las entradas de abajo de la diagonal con ceros, así que
+            si se calcula después, la norma sale mal (le faltan términos).
+          </p>
+        </div>
+      </section>
+
+      <section class="topic" id="jacobi">
+        <h2>Método de Jacobi <span class="tag">iterativo</span></h2>
+        <p>
+          Para resolver <code>Ax=b</code>: se despeja cada <code>x_i</code> de su propia ecuación,
+          usando siempre los valores de <strong>la iteración anterior</strong> (a diferencia de
+          Gauss-Seidel, que ya usa los valores nuevos apenas se calculan).
+        </p>
+        <div class="panel">
+          <div class="formula">
+            x<sub>i</sub><sup>(k+1)</sup>&nbsp;=&nbsp;<span class="frac"><span class="num">b<sub>i</sub> − Σ<sub>j≠i</sub> a<sub>ij</sub>·x<sub>j</sub><sup>(k)</sup></span><span class="den">a<sub>ii</sub></span></span>
+          </div>
+        </div>
+
+        <h3>Tres cosas para implementarlo</h3>
+        <ol>
+          <li>Asegurar <code>a_ii ≠ 0</code> — se garantiza pidiendo que la matriz sea <strong>diagonalmente dominante</strong>: <code>|a_ii| &gt; Σ<sub>j≠i</sub> |a_ij|</code> en cada fila. Condición <em>suficiente, no necesaria</em> (puede converger igual sin serlo).</li>
+          <li>Inicializar el vector <code>X⁽⁰⁾ = (0,0,…,0)</code>.</li>
+          <li>Criterio de corte por tolerancia, en base al error.</li>
+        </ol>
+
+        <h3>Error</h3>
+        <div class="panel">
+          <div class="formula">e&nbsp;=&nbsp;‖X<sub>nuevo</sub> − X<sub>viejo</sub>‖&nbsp;&nbsp;(norma euclídea → error absoluto)</div>
+          <div class="formula" style="margin-top:.6rem;">
+            E&nbsp;=&nbsp;<span class="frac"><span class="num">e</span><span class="den">‖X<sub>nuevo</sub>‖</span></span>&nbsp;×&nbsp;100&nbsp;&nbsp;(error porcentual)
+          </div>
+        </div>
+
+        <h3>Ejemplo paso a paso: primera iteración a mano</h3>
+        <p>
+          Sistema <code>3x₁+x₂=10</code>, <code>−x₁+5x₂=18</code>, <code>x₀=(0,0)</code>
+          (solución exacta: <code>(2,4)</code>).
+        </p>
+        <div class="panel">
+          <pre class="pseudo">x1 = (10 − x2_viejo) / 3 = (10−0)/3 = 3.3333333333
+x2 = (18 + x1_viejo) / 5 = (18+0)/5 = 3.6000000000   ← usa x1_VIEJO (0), no el recien calculado
+
+error estimado = ‖Xnuevo−Xviejo‖ = √(3.3333333333² + 3.6²)               = 4.9062318648
+error exacto   = ‖Xnuevo−Xexacto‖ = √((3.3333333333−2)² + (3.6−4)²)      = 1.3920408679</pre>
+        </div>
+
+        <div class="callout warn">
+          <div class="callout-label">Bug encontrado: la suma no se resetea por fila</div>
+          <p>
+            <code>suma</code> tiene que volver a <code>0</code> en <strong>cada fila</strong> <code>i</code>
+            (adentro del loop de <code>i</code>, antes del loop de <code>j</code>) — no una sola vez
+            por iteración global. Si no, se arrastra entre filas y la fórmula de Jacobi queda mal.
+          </p>
+        </div>
+
+        <div class="callout note">
+          <div class="callout-label">Buena práctica</div>
+          <p>
+            Guardar el error de la iteración anterior y, si el error nuevo es <em>mayor</em> que el
+            anterior, cortar con un aviso de "el método no converge" — Jacobi no siempre converge,
+            y así se detecta a tiempo en vez de iterar al pedo.
+          </p>
+        </div>
+      </section>
+
+      <section class="topic" id="gauss-seidel">
+        <h2>Gauss-Seidel <span class="tag">iterativo</span></h2>
+        <p>
+          Igual que Jacobi, pero usando el valor de <code>x_j</code> ya actualizado en la misma
+          pasada apenas se calcula, en vez de esperar a la iteración siguiente. Por eso converge
+          bastante más rápido que Jacobi cuando converge.
+        </p>
+        <div class="panel">
+          <div class="formula">
+            x<sub>i</sub><sup>nuevo</sup>&nbsp;=&nbsp;<span class="frac"><span class="num">b<sub>i</sub> − Σ<sub>j&lt;i</sub> a<sub>ij</sub>·x<sub>j</sub><sup>nuevo</sup> − Σ<sub>j&gt;i</sub> a<sub>ij</sub>·x<sub>j</sub><sup>viejo</sup></span><span class="den">a<sub>ii</sub></span></span>
+          </div>
+        </div>
+        <div class="callout note">
+          <div class="callout-label">Truco de implementación</div>
+          <p>
+            No hace falta mantener dos arrays separados (<code>Xviejo</code>/<code>Xnuevo</code>)
+            como en Jacobi — alcanza con <strong>un solo array <code>X</code> actualizado en el
+            lugar</strong>. Cuando se calcula <code>X[i]</code>, las posiciones <code>X[0..i-1]</code>
+            ya tienen los valores nuevos de esta pasada, y <code>X[i+1..n-1]</code> todavía tienen
+            los viejos (no se tocaron todavía) — exactamente lo que pide la fórmula, sin necesitar
+            ningún caso especial para <code>i=1</code>. Eso sí, conviene guardar una copia de
+            <code>X</code> de <em>antes</em> de la pasada (<code>Xviejo</code>) solo para poder
+            calcular el error al final.
+          </p>
+        </div>
+
+        <h3>Ejemplo paso a paso: primera iteración a mano</h3>
+        <p>Mismo sistema que en Jacobi (para comparar directo): <code>3x₁+x₂=10</code>, <code>−x₁+5x₂=18</code>, <code>x₀=(0,0)</code>.</p>
+        <div class="panel">
+          <pre class="pseudo">x1 = (10 − x2_viejo) / 3 = (10−0)/3            = 3.3333333333
+x2 = (18 + x1_NUEVO) / 5 = (18+3.3333333333)/5 = 4.2666666667   ← ya usa el x1 recien actualizado
+
+error estimado = ‖Xnuevo−Xviejo‖  = √(3.3333333333² + 4.2666666667²)          = 5.4143841345
+error exacto   = ‖Xnuevo−Xexacto‖ = √((3.3333333333−2)² + (4.2666666667−4)²) = 1.3597385370</pre>
+        </div>
+
+        <div class="callout verified">
+          <div class="callout-label">Verificado: converge mucho más rápido que Jacobi</div>
+          <p>Mismo sistema DD (<code>[[3,1,1],[0,2,1],[1,3,5]]</code>, <code>b=[5,3,9]</code>), misma tolerancia:</p>
+          <div class="panel" style="margin:.6rem 0 0;">
+            <pre class="pseudo">Jacobi:        25 iteraciones
+Gauss-Seidel:   9 iteraciones</pre>
+          </div>
+          <p style="margin-top:.5rem;">Las dos convergen a la misma solución <code>(1,1,1)</code>.</p>
+        </div>
+
+        <h3>Gauss-Seidel con relajación</h3>
+        <p>Después de calcular <code>x_i</code> con la fórmula normal de Gauss-Seidel, se mezcla con el valor viejo:</p>
+        <div class="panel">
+          <div class="formula">X<sub>n</sub>[i] = w·X<sub>n</sub>[i] + (1−w)·X<sub>v</sub>[i]&nbsp;&nbsp;&nbsp;&nbsp;w ∈ [0,2]</div>
+        </div>
+        <ul>
+          <li><code>w=1</code> → Gauss-Seidel tradicional (sin cambios).</li>
+          <li><code>w∈(0,1)</code> → <strong>sub-relajación</strong>: sirve para hacer converger un sistema que de otra forma no converge.</li>
+          <li><code>w∈(1,2]</code> → <strong>sobre-relajación</strong>: le da más peso a los valores nuevos, para acelerar un método que ya converge (no siempre ayuda — depende de la matriz).</li>
+        </ul>
+        <div class="callout note">
+          <div class="callout-label">No hay que calcular w</div>
+          <p>
+            La elección del <code>w</code> óptimo es específica de cada problema y se determina
+            empíricamente — para los ejercicios de la materia, si hace falta relajación,
+            <code>w</code> viene dado en el enunciado, no hay que calcularlo.
+          </p>
+        </div>
+
+        <h3>El orden de las filas importa</h3>
+        <p>
+          A diferencia de eliminación gaussiana (donde el pivoteo reordena filas libremente sin
+          cambiar si el sistema tiene solución), Jacobi y Gauss-Seidel <strong>no son invariantes
+          al orden de las ecuaciones</strong>. El mismo sistema, reescrito con las filas en otro
+          orden, puede pasar de converger rapidísimo a divergir sin remedio.
+        </p>
+        <div class="callout warn">
+          <div class="callout-label">Caso real: mismo sistema, dos órdenes de filas</div>
+          <p><strong>Orden 1</strong> (diagonalmente dominante): <code>4x-y+z=7</code>, <code>4x-8y+z=-21</code>, <code>-2x+y+5z=15</code> → Jacobi converge en 13 iteraciones, Gauss-Seidel en 8. Los dos dan <code>x=2, y=4, z=3</code>.</p>
+          <p style="margin-top:.5rem;"><strong>Orden 2</strong> (mismas 3 ecuaciones, filas 1 y 3 intercambiadas): deja de ser DD en 2 de las 3 filas → ninguno de los dos métodos converge.</p>
+          <p style="margin-top:.5rem;">Para comprobar que diverge de verdad (no es solo el corte conservador del programa), dejando correr la iteración sin cortar, <code>‖x‖</code> crece sin límite y con signo oscilante:</p>
+          <div class="panel" style="margin:.6rem 0 0;">
+            <pre class="pseudo">Jacobi:        10.6 → 41 → 100 → 362 → 960 → 3496 → ... → 3.1×10^6   (iter 12)
+Gauss-Seidel:  36.7 → 288 → 2415 → 20140 → ... → 4.7×10^11          (iter 12)</pre>
+          </div>
+        </div>
+        <div class="callout note">
+          <div class="callout-label">Nota aparte (no vista en clase, opcional)</div>
+          <p>
+            La condición matemática exacta de convergencia (necesaria <em>y</em> suficiente, a
+            diferencia de la DD que solo es suficiente) es que el <strong>radio espectral</strong>
+            de la matriz de iteración sea menor a 1. Para el "Orden 2" de arriba da <code>3.10</code>
+            (Jacobi) y <code>8.35</code> (Gauss-Seidel) — muy por encima de 1, lo que confirma que
+            ninguna semilla inicial converge (no es mala suerte con el punto de partida). No hace
+            falta esto para resolver el ejercicio de la materia — alcanza con mostrar que no es DD
+            y que la sucesión diverge en la práctica. Se deja acá solo como referencia.
+          </p>
+        </div>
+
+        <h3>Cómo encontrar un orden que sí converja</h3>
+        <p>
+          Si te dan una matriz que no converge tal como está ordenada, hay un truco rápido para
+          encontrar un reordenamiento de filas que sí sea diagonalmente dominante, sin tener que
+          probar todas las permutaciones a mano:
+        </p>
+        <p>
+          Para cada fila, fijate en qué columna está el coeficiente de <strong>mayor valor
+          absoluto</strong> — ese es el mejor candidato para quedar en la diagonal de esa fila.
+          Si asignás cada fila a la columna de su coeficiente más grande, y esa asignación no
+          repite ninguna columna (cada fila "elige" una distinta), esa reordenación es DD.
+        </p>
+        <div class="panel">
+          <div class="panel-label">Ejemplo: sistema (2) de arriba</div>
+            <pre class="pseudo">Fila A: -2x + y + 5z = 15   → [-2, 1, 5]  → el mayor es 5 (col. z)
+Fila B:  4x - 8y + z = -21  → [4, -8, 1] → el mayor es -8 (col. y)
+Fila C:  4x - y  + z = 7    → [4, -1, 1] → el mayor es 4 (col. x)
+
+Sin conflicto (cada una eligio una columna distinta) → orden nuevo:
+  fila que quiere columna x primero (Fila C)
+  fila que quiere columna y segunda (Fila B)
+  fila que quiere columna z tercera (Fila A)</pre>
+        </div>
+        <p>Eso da exactamente el "Orden 1" de arriba — el que ya sabíamos que convergía.</p>
+        <ul>
+          <li>Si <strong>dos filas compiten</strong> por la misma columna, no hay asignación directa — hay que probar a mano cuál cede esa columna y se queda con su segunda opción, y volver a chequear DD.</li>
+          <li>El truco encuentra un orden DD, que es condición <em>suficiente</em> — puede existir un orden que converja sin ser DD, pero para los ejercicios de la materia, si existe un reordenamiento que sirva, este método normalmente lo encuentra directo.</li>
+          <li>Si ninguna asignación logra que cada fila domine en su columna, es señal de que ese sistema no tiene ningún reordenamiento que lo vuelva DD (aunque podría converger igual, sin garantía).</li>
+        </ul>
+
+        <h3>Caso puntual: un "no converge" ¿es real, o es demasiado lento?</h3>
+        <p>
+          El chequeo de divergencia del pseudocódigo (comparar el error contra el de la iteración
+          anterior) a veces corta un caso que en el fondo <em>sí</em> converge — solo que muy
+          lento, y sin bajar de forma perfectamente monótona.
+        </p>
+        <div class="callout warn">
+          <div class="callout-label">Ejemplo real</div>
+          <p>
+            Matriz <code>[[5,7,6,5],[7,10,8,7],[6,8,10,9],[5,7,9,10]]</code>, <code>b=[23,32,33,31]</code> —
+            ninguna fila es DD.
+          </p>
+          <ul>
+            <li><strong>Jacobi:</strong> diverge de verdad — el error crece feo desde el arranque (radio espectral de la matriz de iteración ≈ 2.48).</li>
+            <li><strong>Gauss-Seidel:</strong> con el algoritmo tal como se da en clase, corta en la iteración 31 con "no converge" — el error venía bajando de <code>4.6</code> a <code>0.0045</code> durante 30 iteraciones, y ahí tuvo un repunte mínimo (<code>0.004536 → 0.004570</code>) que dispara el corte.</li>
+          </ul>
+        </div>
+        <p><strong>Cómo distinguir uno del otro, mirando la salida:</strong></p>
+        <ul>
+          <li>Si el error venía <strong>creciendo feo</strong> desde el principio (como Jacobi acá) → divergencia real, sin vuelta.</li>
+          <li>Si el error venía <strong>bajando de forma consistente</strong> durante muchas iteraciones y recién al final tuvo un repunte chico (como Gauss-Seidel acá) → sospechoso de ser solo lento, no necesariamente divergente de verdad.</li>
+          <li>Ante la duda, se puede correr una versión con el chequeo de divergencia relajado (que solo corte si el error realmente explota) y muchas más iteraciones de margen, para ver qué pasa en el largo plazo — sin usar esa versión como la respuesta a entregar, solo para entender qué está pasando.</li>
+        </ul>
+        <div class="callout note">
+          <div class="callout-label">En este caso puntual</div>
+          <p>
+            Dejándolo correr sin el corte temprano, Gauss-Seidel termina convergiendo — pero recién
+            en la iteración <strong>1276</strong> (con <code>w=1</code>, tolerancia <code>1e-4</code>).
+          </p>
+        </div>
+        <div class="callout warn">
+          <div class="callout-label">Trampa extra: el criterio de corte puede mentir</div>
+          <p>
+            En esa iteración 1276, el error "sucesivo" (<code>‖X<sub>k+1</sub>-X<sub>k</sub>‖</code>)
+            daba <code>9.99×10⁻⁵</code> — ya por debajo de la tolerancia. Pero el error real contra
+            la solución exacta era <code>0.032</code>, más de 300 veces mayor. Esto pasa porque
+            cuando la convergencia está casi estancada (radio espectral pegado a 1), dos iteraciones
+            consecutivas se parecen mucho entre sí aunque las dos estén todavía lejos de la
+            respuesta real — el criterio de corte mide cuánto cambió de un paso al otro, no cuánto
+            falta para la solución exacta.
+          </p>
+        </div>
+
+        <h3>Criterio de corte por residuo</h3>
+        <p>
+          Alternativa a comparar dos iteraciones consecutivas: reescribiendo <code>Ax=b</code> como
+          <code>Ax−b=0</code>, se puede medir directamente qué tan bien <code>x_k</code> resuelve la
+          ecuación real, en vez de cuánto se movió respecto al paso anterior:
+        </p>
+        <div class="panel">
+          <div class="formula">residuo<sub>k</sub> = ‖A·x<sub>k</sub> − b‖</div>
+        </div>
+        <p>
+          Ventaja sobre <code>‖X<sub>k+1</sub>-X<sub>k</sub>‖</code>: no lo puede engañar una racha
+          de pasos chiquitos que no reflejan la distancia real a la respuesta — justo la trampa de
+          arriba. Se implementa igual que antes, solo cambiando qué se calcula como "error" en cada
+          iteración (y qué se compara contra la tolerancia).
+        </p>
+        <div class="callout verified">
+          <div class="callout-label">Verificado: Problema 2 resuelto de nuevo con este criterio</div>
+          <p><strong>Sistema a)</strong> (bien condicionado): prácticamente lo mismo que antes — Jacobi 48 iteraciones (antes 47), Gauss-Seidel 14 (igual). Mismo resultado <code>x=(1,1,1)</code>.</p>
+          <p style="margin-top:.5rem;"><strong>Sistema b)</strong> (el caso límite de arriba): sigue dando "no converge" para los dos métodos con el algoritmo dado — el criterio de residuo no lo arregla mágicamente, sigue siendo el mismo sistema límite.</p>
+          <p style="margin-top:.5rem;">Donde se ve la ventaja de verdad: dejando correr el sistema b) más allá del corte, comparando los dos criterios a la <strong>misma tolerancia numérica</strong> (<code>1e-4</code>):</p>
+          <div class="panel" style="margin:.6rem 0 0; overflow-x:auto;">
+            <pre class="pseudo">Criterio                    termina en iter   error real vs. solucion exacta
+Diferencia sucesiva              1276              0.032
+Residuo ||Ax-b||                 1750              0.0074   (~4x mas preciso)</pre>
+          </div>
+          <p style="margin-top:.5rem;">
+            A la misma tolerancia, el criterio de residuo tarda más en darse por satisfecho, pero
+            cuando lo hace el resultado es varias veces más preciso — porque exige que la ecuación
+            esté realmente resuelta, no solo que el último paso haya sido chico.
+          </p>
+        </div>
+
+        <h3>Sistemas de banda: aprovechar la estructura</h3>
+        <p>
+          Cuando una matriz tiene muchos ceros lejos de la diagonal (estructura de banda), no hace
+          falta recorrer las <code>n</code> columnas en cada fila durante la iteración — alcanza
+          con mirar la banda.
+        </p>
+        <div class="panel">
+          <div class="panel-label">Ancho de banda</div>
+          <div class="formula">p = max{ |i−j| } para todo (i,j) con A[i][j] ≠ 0</div>
+        </div>
+        <p>
+          Se calcula recorriendo toda la matriz una sola vez — es un algoritmo general, sirve para
+          cualquier matriz, no hay que asumir nada de su estructura de antemano. Encontrado
+          <code>p</code>, en Gauss-Seidel cada fila <code>i</code> recorre solo
+          <code>j ∈ [i−p, i+p]</code> en vez de <code>j ∈ [0, n-1]</code> — fuera de ese rango ya
+          se sabe que es cero, ni vale la pena mirarlo.
+        </p>
+        <div class="callout verified">
+          <div class="callout-label">Verificado: sistema pentadiagonal 50×50</div>
+          <p>Diagonal <code>12</code>, offset ±1 <code>-2</code>, offset ±2 <code>1</code> (ancho de banda real = 2, detectado automáticamente). Mismo resultado con las dos versiones (12 iteraciones, misma solución) — la diferencia es solo velocidad:</p>
+          <div class="panel" style="margin:.6rem 0 0;">
+            <pre class="pseudo">Denso: 12.10 us por resolucion  (recorre las 50 columnas por fila)
+Banda:  4.37 us por resolucion  (recorre ~5 columnas por fila)
+Speedup: 2.77x</pre>
+          </div>
+          <p style="margin-top:.5rem;">
+            Con <code>n=50</code> la diferencia ya se nota. Crece mucho más para <code>n</code>
+            grande: el denso escala con <code>n²</code> por iteración, el de banda con
+            <code>n·p</code> — la ventaja del ancho de banda se vuelve enorme cuanto más grande el
+            sistema (y más angosta la banda relativa a <code>n</code>).
+          </p>
+        </div>
+        <div class="callout note">
+          <div class="callout-label">Generar sistemas grandes: programáticamente, no a mano</div>
+          <p>
+            Un sistema de 50×50 (o más) no se puede tipear a mano en un archivo de texto. Conviene
+            escribir un programita en C++ que arme el patrón (diagonal, offsets, condiciones de
+            borde en las primeras/últimas filas) con un loop, y lo escriba a un archivo con el
+            mismo formato <code>[A|b]</code> que ya se lee siempre — así el sistema de prueba queda
+            reproducible y es parte de la propia entrega, no algo hecho aparte a mano.
+          </p>
+        </div>
+
+        <h3>Relajación en la práctica: comparación real de ω</h3>
+        <p>
+          Caso real: sistema 6×6 tridiagonal ampliado (bandas hasta ±2), <strong>no</strong>
+          diagonalmente dominante (4 de las 6 filas fallan la DD) — y aun así Gauss-Seidel converge
+          sin problemas. Es la prueba concreta de que DD es condición suficiente, no necesaria.
+        </p>
+        <div class="callout verified">
+          <div class="callout-label">Verificado</div>
+          <div class="panel" style="margin:.4rem 0;">
+            <pre class="pseudo">w = 1,0 (Gauss-Seidel sin relajacion):  43 iteraciones
+w = 1,1 (sobrerelajacion):              39 iteraciones  (~9% menos)</pre>
+          </div>
+          <p>Misma solución en los dos casos: <code>x=(2, 0, 4, 4, 0, 2)</code>. Con un sistema que ya converge razonablemente bien, un <code>ω</code> levemente mayor a 1 acelera un poco sin desestabilizar.</p>
+        </div>
+        <div class="callout note">
+          <div class="callout-label">Detalle de borde, sin importancia práctica</div>
+          <p>
+            En este sistema, dos filas tienen la diagonal <strong>igual</strong> (no mayor) a la
+            suma de las demás — no cumplen la DD estricta tampoco, pero como el chequeo de código
+            usa <code>&lt;</code> estricto, no se marcan como "no DD". No cambia el resultado del
+            ejercicio, es solo una curiosidad del caso límite exacto.
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================== CAPÍTULO 3 ===================== -->
+    <div class="chapter">
+      <div class="chapter-label">Capítulo 3 — Interpolación</div>
+
+      <section class="topic" id="interpolacion-intro">
+        <h2>Idea general</h2>
+        <p>
+          Dado un conjunto de <code>n+1</code> datos <code>(x₀,y₀), (x₁,y₁), …, (xₙ,yₙ)</code> con
+          los <code>xᵢ</code> todos distintos, existe <strong>uno y solo un</strong> polinomio de
+          grado <code>≤n</code> que pasa exactamente por todos ellos. Sirve para estimar un valor
+          intermedio (un <code>y</code> para un <code>x</code> que no está en la tabla de datos)
+          sin conocer la función real detrás de los datos.
+        </p>
+        <div class="panel">
+          <div class="panel-label">Forma general del polinomio de grado n</div>
+          <div class="formula">P<sub>n</sub>(x) = a₀ + a₁x + a₂x² + … + aₙxⁿ</div>
+        </div>
+        <p>Dos formas de conseguirlo: Lagrange (evalúa directo, sin armar el polinomio) y coeficientes indeterminados (arma el polinomio completo, resolviendo un sistema lineal — ya sabemos hacer esto).</p>
+      </section>
+
+      <section class="topic" id="lagrange">
+        <h2>Lagrange</h2>
+        <div class="panel">
+          <div class="formula">
+            P<sub>n</sub>(x) = Σ<sub>k=0</sub><sup>n</sup> y<sub>k</sub>·C<sub>nk</sub>(x)
+            &nbsp;&nbsp;&nbsp;&nbsp;con&nbsp;&nbsp;&nbsp;&nbsp;
+            C<sub>nk</sub>(x) = Π<sub>i≠k</sub>&nbsp;<span class="frac"><span class="num">x − x<sub>i</sub></span><span class="den">x<sub>k</sub> − x<sub>i</sub></span></span>
+          </div>
+        </div>
+        <p>
+          Cada <code>C<sub>nk</sub>(x)</code> ("cardinal" de Lagrange) tiene una propiedad clave que
+          hace que todo funcione:
+        </p>
+        <div class="panel">
+          <div class="formula">C<sub>nk</sub>(x<sub>k</sub>) = 1&nbsp;&nbsp;&nbsp;&nbsp;C<sub>nk</sub>(x<sub>j</sub>) = 0 &nbsp;(para j≠k)</div>
+        </div>
+        <p>
+          Por eso, al evaluar en cualquiera de los puntos originales <code>x<sub>j</sub></code>,
+          todos los términos de la suma se anulan menos uno, y queda
+          <code>P<sub>n</sub>(x<sub>j</sub>) = y<sub>j</sub>·1 = y<sub>j</sub></code> — el polinomio
+          pasa exacto por los datos, por construcción.
+        </p>
+        <div class="panel">
+          <div class="panel-label">Pseudocódigo (evalúa Pn en un punto x̂, no arma el polinomio)</div>
+          <pre class="pseudo">Leer datos y guardarlos: x[n+1], y[n+1]
+Ingresar x_hat
+suma = 0
+Do k = 0,...,n
+    prod = 1
+    Do i = 0,...,n
+        if (i != k)
+            prod = prod * (x_hat - x[i]) / (x[k] - x[i])
+        end if
+    end Do
+    suma = suma + y[k]*prod
+end Do
+Mostrar resultado: suma</pre>
+        </div>
+        <div class="callout warn">
+          <div class="callout-label">Desventaja</div>
+          <p>
+            Lagrange solo devuelve el <strong>valor</strong> interpolado en un punto puntual — no
+            arma la forma funcional del polinomio (los coeficientes <code>a₀,a₁,...</code>). Si
+            hace falta el polinomio completo (por ejemplo, para derivarlo o graficarlo), conviene
+            el método de coeficientes indeterminados.
+          </p>
+        </div>
+      </section>
+
+      <section class="topic" id="coeficientes-indeterminados">
+        <h2>Coeficientes indeterminados (Vandermonde)</h2>
+        <p>
+          Cada punto <code>(x<sub>i</sub>,y<sub>i</sub>)</code> da una ecuación lineal en las
+          incógnitas <code>a₀,...,aₙ</code>: <code>a₀ + a₁x<sub>i</sub> + a₂x<sub>i</sub>² + … + aₙx<sub>i</sub>ⁿ = y<sub>i</sub></code>.
+          Con <code>n+1</code> puntos quedan <code>n+1</code> ecuaciones para <code>n+1</code>
+          incógnitas — un sistema lineal <code>Ax=b</code> (la misma matriz de Vandermonde que ya
+          vimos en <a href="#gauss">interpolación polinómica</a> de Eliminación gaussiana), que se
+          resuelve con Gauss + pivoteo, tal como ya lo tenemos hecho.
+        </p>
+        <div class="panel">
+          <div class="panel-label">Pseudocódigo</div>
+          <pre class="pseudo">Leer los datos y guardarlos: x[n+1], y[n+1]
+
+Armar A y b:
+Do i = 0,...,n
+    Do j = 0,...,n
+        A[i][j] = pow(x[i], j)
+    end Do
+    b[i] = y[i]
+end Do
+
+Resolver el sistema: call GaussPivot(A, b) -> devuelve los a_i
+
+Si evaluamos en x_hat:
+    suma = 0
+    Do i = 0,...,n
+        suma = suma + a[i]*pow(x_hat, i)
+    end Do
+    Mostrar resultado: suma</pre>
+        </div>
+      </section>
+
+      <section class="topic" id="verificar-interpolacion" style="border-bottom:none; padding-bottom:0;">
+        <h2>Cómo verificar que el resultado está bien</h2>
+        <ol>
+          <li>
+            <strong>El chequeo básico, siempre válido:</strong> evaluar el polinomio en los puntos
+            <em>originales</em> y confirmar que <code>P<sub>n</sub>(x<sub>i</sub>) = y<sub>i</sub></code>
+            exacto, para todos los <code>i</code>. Si no da exacto ahí, hay un error en el cálculo
+            — no hace falta ni conocer la respuesta de antemano.
+          </li>
+          <li>
+            <strong>Comparar los dos métodos entre sí.</strong> Lagrange y coeficientes
+            indeterminados construyen matemáticamente <em>el mismo</em> polinomio (por unicidad),
+            así que evaluados en el mismo punto tienen que dar exactamente igual. Si difieren, hay
+            un bug en alguno de los dos.
+          </li>
+          <li>
+            <strong>¿El valor es razonable?</strong> — con cuidado. Para polinomios de grado bajo y
+            datos que no cambian mucho, el valor interpolado suele caer entre los <code>y</code>
+            vecinos. Pero no es una regla general: un polinomio de grado alto puede oscilar entre
+            los puntos (fenómeno de Runge) y dar valores fuera de ese rango sin que sea un error.
+            Sirve como señal de alerta, no como prueba.
+          </li>
+          <li>
+            <strong>Interpolar vs. extrapolar.</strong> Evaluar <em>dentro</em> del rango
+            <code>[x₀, xₙ]</code> (interpolar) es razonablemente confiable. Evaluar
+            <em>afuera</em> de ese rango (extrapolar) es mucho menos confiable — nada garantiza que
+            el polinomio se siga pareciendo a los datos reales más allá de donde fue ajustado.
+          </li>
+        </ol>
+        <div class="callout verified">
+          <div class="callout-label">Ejemplo verificado</div>
+          <p>Puntos <code>(0,1), (3,2), (6,8)</code> → polinomio de grado 2.</p>
+          <div class="panel" style="margin:.6rem 0;">
+            <div class="formula">P₂(x) = 1 − 0,5x + 0,277778x²</div>
+          </div>
+          <p>Chequeo en los puntos originales: <code>P₂(0)=1</code> ✓, <code>P₂(3)=2</code> ✓, <code>P₂(6)=8</code> ✓.</p>
+          <p style="margin-top:.5rem;">Interpolando en <code>x=2</code> (adentro del rango): Lagrange y coeficientes indeterminados dan los dos <code>P(2) = 1,1111</code> (=10/9). Coincide.</p>
+          <p style="margin-top:.5rem;">Interpolando en <code>x=4</code>: <code>P(4) = 3,4444</code> (=31/9) — cae entre <code>y=2</code> (en x=3) y <code>y=8</code> (en x=6), como se esperaba para este caso de grado bajo.</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================== CAPÍTULO 4 ===================== -->
+    <div class="chapter">
+      <div class="chapter-label">Capítulo 4 — Ajuste de curvas</div>
+
+      <section class="topic" id="ajuste-intro">
+        <h2>Idea general</h2>
+        <p>
+          Interpolación fuerza al polinomio a pasar <strong>exacto</strong> por cada punto. Eso
+          funciona bien con datos limpios, pero si los datos vienen de mediciones con error
+          apreciable, forzar el paso exacto por cada uno (ruido incluido) puede dar un polinomio
+          que oscila mucho y no sirve para predecir nada — sobre todo si <code>n</code> es grande.
+          A veces, con solo mirar los datos ("por inspección"), ya se intuye un comportamiento
+          simple (lineal, por ejemplo) escondido detrás del ruido.
+        </p>
+        <p>
+          <strong>Regresión</strong> no busca pasar exacto por los puntos — busca la función que
+          quede <em>lo más cerca posible</em> de todos ellos a la vez, aceptando algo de error en
+          cada uno a cambio de una forma simple y estable.
+        </p>
+      </section>
+
+      <section class="topic" id="regresion-lineal">
+        <h2>Regresión lineal</h2>
+        <p>
+          El caso más simple: buscar <code>F(x) = ax + b</code> tal que el error cuadrático total
+          sea mínimo. Con <code>e<sub>i</sub> = |y<sub>i</sub> − F(x<sub>i</sub>)|</code>, el
+          "criterio de cuadrados mínimos" busca minimizar:
+        </p>
+        <div class="panel">
+          <div class="formula">S<sub>r</sub>(a,b) = Σ<sub>i=0</sub><sup>n</sup> (y<sub>i</sub> − ax<sub>i</sub> − b)²</div>
+        </div>
+        <p>
+          Derivando e igualando a 0 (<code>∂S<sub>r</sub>/∂a=0</code>, <code>∂S<sub>r</sub>/∂b=0</code>)
+          se llega a un sistema lineal 2×2 para las incógnitas <code>a,b</code>:
+        </p>
+        <div class="panel">
+          <div class="formula">
+            <span class="frac"><span class="num">Σx<sub>i</sub>²&nbsp;&nbsp;Σx<sub>i</sub></span><span class="den">Σx<sub>i</sub>&nbsp;&nbsp;(n+1)</span></span>
+            &nbsp;&nbsp;
+            <span class="frac"><span class="num">a</span><span class="den">b</span></span>
+            &nbsp;=&nbsp;
+            <span class="frac"><span class="num">Σx<sub>i</sub>y<sub>i</sub></span><span class="den">Σy<sub>i</sub></span></span>
+          </div>
+        </div>
+        <div class="callout verified">
+          <div class="callout-label">Ejemplo verificado</div>
+          <p><code>x: 0, 1, 1.5, 3, 5</code> &nbsp;&nbsp; <code>y: 1.2, 2.7, 3.9, 7.1, 10</code> (5 datos)</p>
+          <div class="panel" style="margin:.6rem 0;">
+            <pre class="pseudo">Sum x^2 = 37.25   Sum x = 10.5
+Sum xy  = 79.85   Sum y = 24.9
+
+[37.25  10.5] [a]   [79.85]
+[10.5   5   ] [b] = [24.9 ]
+
+a = 1.8132   b = 1.1724</pre>
+          </div>
+          <p><code>F(x) = 1,81x + 1,17</code>. Para corroborar: evaluar <code>F</code> en cada <code>x</code> y ver si da parecido a las <code>y</code> reales (no exacto, pero cerca).</p>
+        </div>
+      </section>
+
+      <section class="topic" id="coeficiente-correlacion">
+        <h2>Coeficiente de correlación</h2>
+        <p>
+          ¿Cómo saber si el ajuste lineal es bueno, o si los datos en realidad no tienen ninguna
+          relación lineal y son solo mediciones dispersas de un mismo valor? Se compara la
+          dispersión total de los datos contra el error que deja el ajuste:
+        </p>
+        <div class="panel">
+          <div class="formula">
+            S<sub>t</sub> = Σ(y<sub>i</sub> − ȳ)² &nbsp;(dispersión total, respecto al promedio)
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            S<sub>r</sub> = Σ(y<sub>i</sub> − F(x<sub>i</sub>))² &nbsp;(error que deja el ajuste)
+          </div>
+        </div>
+        <div class="panel">
+          <div class="formula">r = √( (S<sub>t</sub> − S<sub>r</sub>) / S<sub>t</sub> )</div>
+        </div>
+        <ul>
+          <li>Ajuste lineal perfecto → <code>S<sub>r</sub>=0</code> → <code>r=1</code>.</li>
+          <li><code>r=0</code> ⟺ <code>S<sub>t</sub>=S<sub>r</sub></code>: el ajuste no explica nada más de lo que ya explicaba la dispersión estadística de los datos — el "ajuste" no sirvió de nada.</li>
+          <li>Cuanto más cerca de 1 esté <code>r</code>, mejor el ajuste (como referencia informal de tus apuntes: <code>r&lt;0,7</code> ya se considera medio/malo).</li>
+        </ul>
+        <div class="callout verified">
+          <div class="callout-label">Aplicado al ejemplo anterior</div>
+          <p><code>ȳ = 24,9/5 = 4,98</code> &nbsp;&nbsp; <code>S<sub>t</sub> = 50,35</code> &nbsp;&nbsp; <code>S<sub>r</sub> = 0,378</code> → <code>r = 0,99624</code> — muy buen ajuste.</p>
+        </div>
+      </section>
+
+      <section class="topic" id="regresion-arbitraria">
+        <h2>Regresión con funciones arbitrarias</h2>
+        <p>
+          La regresión por cuadrados mínimos no está limitada a rectas ni polinomios — sirve para
+          <strong>cualquier</strong> función con parámetros a ajustar. La receta es siempre la
+          misma: plantear <code>S<sub>r</sub></code> con la función propuesta, derivar respecto a
+          cada parámetro, igualar a 0, y resolver el sistema lineal resultante (con Gauss, como
+          siempre).
+        </p>
+        <div class="callout verified">
+          <div class="callout-label">Ejemplo real (P4 - Parcial 1, 2023)</div>
+          <p>Ajustar <code>F(x) = a·sen(x) + b·cos(x)</code> a 7 puntos. Derivando <code>S<sub>r</sub></code> respecto a <code>a</code> y <code>b</code>:</p>
+          <div class="panel" style="margin:.6rem 0;">
+            <div class="formula">
+              <span class="frac"><span class="num">Σsen²x<sub>i</sub>&nbsp;&nbsp;Σcosx<sub>i</sub>senx<sub>i</sub></span><span class="den">Σcosx<sub>i</sub>senx<sub>i</sub>&nbsp;&nbsp;Σcos²x<sub>i</sub></span></span>
+              &nbsp;&nbsp;
+              <span class="frac"><span class="num">a</span><span class="den">b</span></span>
+              &nbsp;=&nbsp;
+              <span class="frac"><span class="num">Σy<sub>i</sub>senx<sub>i</sub></span><span class="den">Σy<sub>i</sub>cosx<sub>i</sub></span></span>
+            </div>
+          </div>
+          <p>Mismo sistema 2×2 de siempre, distintas sumas — resolver con Gauss. Con los 7 datos del parcial: <code>a=0,678</code>, <code>b=-1,928</code>, <code>r=0,970</code> (buen ajuste, no perfecto).</p>
+        </div>
+      </section>
+
+      <section class="topic" id="regresion-polinomica" style="border-bottom:none; padding-bottom:0;">
+        <h2>Regresión polinómica (caso general)</h2>
+        <p>
+          Generaliza la regresión lineal a un polinomio de grado <code>p</code> cualquiera:
+          <code>F(x) = a₀ + a₁x + a₂x² + … + aₚxᵖ</code>. Hacen falta al menos
+          <code>p+1</code> puntos para que el sistema quede determinado. Derivando
+          <code>S<sub>r</sub></code> respecto a cada <code>a<sub>k</sub></code> (<code>p+1</code>
+          derivadas) se llega a un sistema lineal <code>(p+1)×(p+1)</code>, con esta forma general
+          para cualquier <code>p</code> (las "ecuaciones normales"):
+        </p>
+        <div class="panel">
+          <div class="formula">
+            A<sub>ℓm</sub> = Σ<sub>i=0</sub><sup>n</sup> x<sub>i</sub><sup>ℓ+m</sup>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            b<sub>ℓ</sub> = Σ<sub>i=0</sub><sup>n</sup> y<sub>i</sub>·x<sub>i</sub><sup>ℓ</sup>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            (ℓ,m = 0,...,p)
+          </div>
+        </div>
+        <p>Con <code>p=1</code> esto se reduce exactamente a la matriz de regresión lineal de arriba — es el mismo caso, generalizado.</p>
+        <div class="panel">
+          <div class="panel-label">Pseudocódigo</div>
+          <pre class="pseudo">Ingresar los datos (x,y) -> guardar en x[n+1], y[n+1]
+Ingresar p (grado del polinomio)
+Si (n+1) &lt; (p+1) -> imprimir "no hay suficientes datos", parar
+
+Armar A, b:  (A[p+1][p+1], b[p+1])
+Do l = 0,...,p
+    sumaAy = 0
+    Do i = 0,...,n
+        sumaAy = sumaAy + pow(x[i],l)*y[i]
+    end Do
+    b[l] = sumaAy
+
+    Do m = 0,...,p
+        sumaAx = 0
+        Do i = 0,...,n
+            sumaAx = sumaAx + pow(x[i], l+m)
+        end Do
+        A[l][m] = sumaAx
+    end Do
+end Do
+
+Llamar a Eliminacion Gaussiana(A,b) -> devuelve los a_k
+Mostrar resultados
+
+Calcular el coeficiente de correlacion:
+    yprom = (suma de y[i]) / (n+1)
+    sumaT = 0, sumaR = 0
+    Do i = 0,...,n
+        sumaT = sumaT + (y[i]-yprom)^2
+        fi = suma_j( a[j]*pow(x[i],j) )   para j=0,...,p
+        sumaR = sumaR + (y[i]-fi)^2
+    end Do
+    r = sqrt( (sumaT-sumaR)/sumaT )
+Mostrar r</pre>
+        </div>
+        <div class="callout verified">
+          <div class="callout-label">Código verificado: regresionPolinomica.cpp</div>
+          <p>Implementa este pseudocódigo tal cual — con <code>p=1</code> ES la regresión lineal. Dos chequeos:</p>
+          <ul>
+            <li><strong>Contra el ejemplo de regresión lineal de arriba</strong> (<code>p=1</code>): dio <code>a0=1,17237</code>, <code>a1=1,81316</code>, <code>r=0,996245</code> — exacto a lo calculado a mano.</li>
+            <li><strong>Ajuste exacto sin ruido</strong> (<code>p=2</code>, datos generados desde <code>y=2+3x-x²</code> sin error): recuperó <code>a0=2, a1=3, a2=-1</code> exactos, con <code>Sr=0</code> y <code>r=1</code> — cuando no hay ruido, la regresión coincide con la interpolación exacta.</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================== TRANSVERSAL: GUIA DE PROGRAMAS ===================== -->
+    <div class="chapter">
+      <div class="chapter-label">Transversal — guía de programas</div>
+      <section class="topic" id="guia-programas">
+        <h2>Qué código usar para cada tipo de problema</h2>
+        <p>
+          Mapa de todos los <code>.cpp</code> del repo, agrupados por carpeta. Muchos se parecen
+          entre sí a propósito — son variantes del mismo algoritmo con un solo cambio puntual
+          (el criterio de corte, el valor inicial, si conviene o no la función exacta) — así que
+          la tabla marca justo esa diferencia, que es lo que hay que mirar para elegir cuál.
+        </p>
+
+        <h3>LocalizacionRaices/</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Archivo</th><th>Qué hace</th><th>Cuándo usarlo</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><code>raices.cpp</code></td>
+                <td>Menú con los 6 métodos de la materia: bisección, falsa posición, punto fijo, Newton-Raphson, secante, raíz n-ésima.</td>
+                <td>Base para cualquier ejercicio de raíces. <strong>Cada función tiene la <code>f(x)</code> (y a veces la tolerancia/máx. iteraciones) hardcodeada</strong> como <code>auto f = [](double x){...}</code> al principio — para un problema nuevo hay que editar esa línea y recompilar, no sirve "tal cual" para dos ejercicios distintos a la vez.</td>
+              </tr>
+              <tr>
+                <td><code>newtonRaphsonProblema1.cpp</code></td>
+                <td>Newton-Raphson standalone, ya con la <code>f(x)</code> de un problema puntual.</td>
+                <td>Cuando la función <code>newtonRaphson()</code> de <code>raices.cpp</code> ya está "ocupada" por otro ejercicio (con su propia <code>f(x)</code>/tolerancia ya ajustadas) y no querés pisarlo — se copia este patrón a un archivo nuevo en vez de sobreescribir el que ya funciona para otro problema.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout warn">
+          <div class="callout-label">Ojo antes de reusar cualquier método de raíces.cpp</div>
+          <p>
+            Al menos dos funciones quedaron con parámetros de un ejercicio específico, no
+            genéricos: <code>falsaposicion()</code> tiene <code>iter&lt;10</code> hardcodeado y
+            <code>newtonRaphson()</code> tiene <code>iter&lt;4</code> — ambos porque un enunciado
+            pidió justo el resultado en esa iteración puntual. Antes de correr cualquiera de estos
+            para un problema nuevo, revisar la <code>f(x)</code>, la tolerancia y el
+            <code>max_iter</code> de esa función particular.
+          </p>
+        </div>
+
+        <h3>Matrices/</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Archivo</th><th>Qué hace</th><th>Cuándo usarlo</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><code>eliminacionGausseana.cpp</code></td>
+                <td>Menú con Gauss (triangulación + retrosustitución) y Gauss-Jordan. Calcula determinante (con signo, compensando swaps) y norma de Frobenius.</td>
+                <td>Cualquier sistema lineal a resolver de forma <strong>directa</strong> (no iterativa), sea cual sea su tamaño. También sirve como plantilla de Gauss para cuando otro programa necesita resolver un sistema aparte (interpolación por coeficientes indeterminados, ajuste de curvas) — en esos casos el mismo Gauss+pivoteo está copiado adentro del archivo correspondiente, no se hace <code>#include</code> de este.</td>
+              </tr>
+              <tr>
+                <td><code>jacobi.cpp</code></td>
+                <td>Iterativo, actualiza todo el vector con los valores de la iteración anterior. Corte por diferencia sucesiva <code>‖Xnuevo−Xviejo‖</code>.</td>
+                <td>Cuando el enunciado pide Jacobi explícitamente y el criterio de error es el "estándar" del curso (diferencia entre iteraciones, no residuo).</td>
+              </tr>
+              <tr>
+                <td><code>jacobiResiduo.cpp</code></td>
+                <td>Igual que <code>jacobi.cpp</code>, pero el corte es por <strong>residuo</strong> <code>‖A·x−b‖</code> en vez de diferencia sucesiva.</td>
+                <td>Solo cuando el enunciado pide ese criterio específico (ej. "hasta que el residuo sea menor a...").</td>
+              </tr>
+              <tr>
+                <td><code>gaussSeidel.cpp</code></td>
+                <td>Igual filosofía que Jacobi pero con actualización in-place (un solo array), más relajación <code>w</code>. Corte por diferencia sucesiva.</td>
+                <td>Cuando el enunciado pide Gauss-Seidel (con o sin relajación) y el criterio es diferencia sucesiva. <strong>El vector inicial arranca en 0 por defecto</strong> — si el enunciado da un <code>x0</code> distinto, hay que cambiar esa línea antes de correr.</td>
+              </tr>
+              <tr>
+                <td><code>gaussSeidelResiduo.cpp</code></td>
+                <td>Igual que <code>gaussSeidel.cpp</code> pero con corte por residuo <code>‖A·x−b‖</code>.</td>
+                <td>Mismo caso que <code>jacobiResiduo.cpp</code>: solo si el enunciado pide residuo en vez de diferencia sucesiva.</td>
+              </tr>
+              <tr>
+                <td><code>gaussSeidelMejorado.cpp</code></td>
+                <td>Variante exploratoria: solo declara divergencia si el error realmente explota (no ante un repunte chico puntual), <code>max_iter</code> mucho más alto.</td>
+                <td><strong>NO es para entregar</strong> — sirve para diagnosticar, aparte, si un "no converge" del algoritmo de clase es real o solo una convergencia muy lenta. La respuesta que se entrega siempre sale de <code>gaussSeidel.cpp</code> tal cual, con el pseudocódigo de la profesora.</td>
+              </tr>
+              <tr>
+                <td><code>generarBanda.cpp</code> + <code>gaussSeidelBanda.cpp</code></td>
+                <td>El primero genera un sistema de banda (ej. pentadiagonal, n grande) y lo escribe a archivo. El segundo compara Gauss-Seidel "denso" (recorre todas las columnas) contra una versión que solo recorre el ancho de banda, y mide el speedup.</td>
+                <td>Ejercicios de sistemas grandes con estructura de banda, donde piden comparar tiempos de cómputo aprovechando (o no) esa estructura.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Interpolacion/</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Archivo</th><th>Qué hace</th><th>Cuándo usarlo</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><code>lagrange.cpp</code></td>
+                <td>Evalúa <code>Pn(x̂)</code> directo en un punto puntual, sin armar el polinomio expandido.</td>
+                <td>El enunciado da una tabla de puntos y solo pide el valor interpolado en uno o dos puntos concretos (no el polinomio en sí).</td>
+              </tr>
+              <tr>
+                <td><code>coeficientes.cpp</code></td>
+                <td>Vandermonde + Gauss: da los coeficientes <code>a0..an</code> del polinomio expandido, y de paso lo evalúa en un punto.</td>
+                <td>El enunciado pide explícitamente "el polinomio de Lagrange" / sus coeficientes, no solo un valor puntual (ej. Problema 4, punto b).</td>
+              </tr>
+              <tr>
+                <td><code>lagrangeGrilla.cpp</code></td>
+                <td>Igual que <code>lagrange.cpp</code> pero evalúa en una grilla fina y exporta un CSV para graficar. Sin columna de error.</td>
+                <td>Los datos son experimentales/de tabla (no hay una <code>f(x)</code> real conocida contra la cual comparar) y piden graficar la curva interpolada.</td>
+              </tr>
+              <tr>
+                <td><code>lagrangeFuncion.cpp</code></td>
+                <td>Se conoce la <code>f(x)</code> real: genera nodos equiespaciados automáticamente, calcula error de interpolación y extrapolación, permite probar varios grados <code>n</code> en la misma corrida.</td>
+                <td>El enunciado da la función exacta y pide comparar el polinomio contra ella (ej. estudiar Runge, comparar grados, ver qué tan mal extrapola).</td>
+              </tr>
+              <tr>
+                <td><code>lagrangeNodosDados.cpp</code></td>
+                <td>Como <code>lagrangeFuncion.cpp</code> (se conoce <code>f(x)</code>, calcula error exacto), pero los nodos vienen dados puntualmente en un archivo (no equiespaciados). Cubre en una corrida: armar el polinomio, evaluar+error en un punto, y exportar la grilla de error para graficar.</td>
+                <td>Se conoce la <code>f(x)</code> real, pero los nodos son una tabla específica del enunciado, no equiespaciados a elección.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>AjusteDeCurvas/</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Archivo</th><th>Qué hace</th><th>Cuándo usarlo</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><code>regresionPolinomica.cpp</code></td>
+                <td>Ajuste <code>F(x)=a0+a1x+...+apx^p</code> (con p=1, regresión lineal simple). Arma y resuelve las ecuaciones normales, da <code>St, Sr, r</code> y el error cuadrático medio.</td>
+                <td>El modelo a ajustar es un polinomio en <code>x</code> (incluida la recta).</td>
+              </tr>
+              <tr>
+                <td><code>regresionFuncionesBase.cpp</code></td>
+                <td>Generaliza a <code>F(x)=a0·φ0(x)+a1·φ1(x)+...</code> con cualquier combinación de funciones base. Arma A y b automáticamente a partir de la lista de <code>φ</code>, y resuelve el sistema él mismo.</td>
+                <td>El modelo NO es un polinomio en <code>x</code> (ej. <code>a·sen(x)+b·cos(x)</code> del Problema 3) y querés que el programa arme y resuelva todo de punta a punta.</td>
+              </tr>
+              <tr>
+                <td><code>evaluarAjuste.cpp</code></td>
+                <td>Complemento de <code>regresionFuncionesBase.cpp</code>: NO arma ni resuelve ningún sistema — solo recibe <code>a0, a1</code> ya calculados (a mano, o resolviendo el sistema aparte con <code>eliminacionGausseana.cpp</code>) y evalúa <code>F(x)</code> contra los puntos para dar <code>St, Sr, r</code>.</td>
+                <td>El enunciado pide explícitamente plantear el sistema a mano y resolverlo con Gauss (mostrando esa cuenta), y recién después evaluar el ajuste — separa en dos pasos lo que <code>regresionFuncionesBase.cpp</code> hace en uno solo.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout note">
+          <div class="callout-label">El patrón que se repite en casi todos</div>
+          <p>
+            La gran mayoría de estos programas comparten el mismo esqueleto (leer archivo de
+            puntos/matriz, armar el sistema, Gauss con pivoteo parcial) y solo cambian en <strong>una
+            línea marcada explícitamente</strong> con un comentario tipo <code>// ACA se elige el
+            problema</code> — la <code>f(x)</code>, las funciones base <code>φ</code>, o el
+            criterio de corte. Antes de correr cualquiera de estos para un ejercicio nuevo, ubicar
+            esa línea puntual y confirmar que coincide con el enunciado, en vez de asumir que "ya
+            está bien" porque compiló y corrió sin errores.
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================== TRANSVERSAL: TIPOS DE ERROR ===================== -->
+    <div class="chapter">
+      <div class="chapter-label">Transversal — tipos de error</div>
+      <section class="topic" id="tipos-de-error">
+        <h2>Estimado vs. exacto, absoluto vs. porcentual</h2>
+        <p>
+          Estos cuatro nombres se mezclan todo el tiempo en los enunciados, y en realidad son
+          dos ejes independientes que se cruzan. El criterio es el mismo para bisección, falsa
+          posición, punto fijo, Newton-Raphson, secante, Jacobi y Gauss-Seidel — solo cambia la
+          fórmula puntual de cada método.
+        </p>
+
+        <div class="panel">
+          <div class="panel-label">Eje 1 — ¿contra qué se compara?</div>
+          <ul style="margin:0;">
+            <li><strong>Estimado:</strong> compara la iteración actual contra la <strong>iteración anterior</strong> (<code>x_nuevo</code> vs <code>x_viejo</code>). Es el único que un programa real puede calcular — nunca conoce la solución exacta — y es lo que se usa como criterio de corte del <code>while</code>.</li>
+            <li><strong>Exacto:</strong> compara la aproximación actual contra la <strong>solución analítica conocida</strong> (<code>x_aprox</code> vs <code>x_exacto</code>). Solo se puede calcular en ejercicios donde el enunciado permite obtener la raíz real a mano (el punto "a" del parcial modelo, por ejemplo) — sirve para <em>verificar</em> qué tan buena es la estimación, no como criterio de corte del programa.</li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <div class="panel-label">Eje 2 — ¿absoluto o porcentual?</div>
+          <ul style="margin:0;">
+            <li><strong>Absoluto:</strong> la diferencia cruda, sin normalizar. <code>error = |A − B|</code>.</li>
+            <li><strong>Porcentual:</strong> el mismo valor absoluto, dividido por algo de referencia y ×100 para expresarlo como %.</li>
+          </ul>
+        </div>
+
+        <h3>Las cuatro combinaciones</h3>
+        <div class="panel">
+          <div class="panel-label">Estimado — absoluto</div>
+          <div class="formula">error = |x<sub>nuevo</sub> − x<sub>viejo</sub>|</div>
+        </div>
+        <div class="panel">
+          <div class="panel-label">Estimado — porcentual (fórmula (#) del parcial modelo, para bisección/Newton-Raphson)</div>
+          <div class="formula">
+            ε&nbsp;=&nbsp;<span class="frac"><span class="num">|x<sub>nuevo</sub> − x<sub>viejo</sub>|</span><span class="den">½·|x<sub>nuevo</sub> + x<sub>viejo</sub>|</span></span>&nbsp;×&nbsp;100
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-label">Exacto — absoluto</div>
+          <div class="formula">error<sub>exacto</sub> = |x<sub>aprox</sub> − x<sub>exacto</sub>|</div>
+        </div>
+        <div class="panel">
+          <div class="panel-label">Exacto — porcentual</div>
+          <div class="formula">
+            ε<sub>exacto</sub>&nbsp;=&nbsp;<span class="frac"><span class="num">|x<sub>aprox</sub> − x<sub>exacto</sub>|</span><span class="den">|x<sub>exacto</sub>|</span></span>&nbsp;×&nbsp;100
+          </div>
+        </div>
+
+        <div class="callout warn">
+          <div class="callout-label">La fórmula del "estimado" no es siempre la misma</div>
+          <p>
+            El denominador de la versión porcentual del error estimado <strong>depende del
+            enunciado</strong> — no hay una única fórmula universal. Ejemplos ya vistos en la
+            materia:
+          </p>
+          <ul>
+            <li>Bisección/Newton-Raphson (parcial modelo): divide por el <strong>promedio</strong> de <code>x_nuevo</code> y <code>x_viejo</code> (fórmula (#) de arriba).</li>
+            <li>Jacobi/Gauss-Seidel (ver <a href="#jacobi">capítulo 2</a>): divide por la <strong>norma del vector nuevo</strong>, <code>E = ‖X_nuevo−X_viejo‖ / ‖X_nuevo‖ × 100</code>.</li>
+          </ul>
+          <p style="margin-top:.5rem;">
+            Antes de programar el criterio de error, siempre conviene releer qué fórmula puntual
+            pide <em>ese</em> enunciado — no asumir que es la misma del ejercicio anterior.
+          </p>
+        </div>
+
+        <h3>Ejemplo resuelto (Problema 1, parcial modelo)</h3>
+        <p>
+          <code>f(x) = (x+1)/(x+4) − 0.25x</code>, raíz exacta <code>x=2</code> (punto a, despejado
+          a mano). Bisección en <code>[1.75, 3.2]</code>, última iteración (la 13ª):
+        </p>
+        <div class="panel">
+          <pre class="pseudo">x_aprox (c)              = 2.0001037598
+error estimado (#)       = 0.0088492470 %   (contra la iteracion anterior)
+error absoluto exacto    = 0.0001037598     (contra x=2)
+error porcentual exacto  = 0.0051880 %      (contra x=2)</pre>
+        </div>
+        <p>Newton-Raphson desde <code>x0=1.0</code>, primera iteración:</p>
+        <div class="panel">
+          <pre class="pseudo">x1                       = 2.1538461538
+error estimado (#)       = 73.1707317073 %  (contra x0=1.0)
+error absoluto exacto    = 0.1538461538     (contra x=2)
+error porcentual exacto  = 7.6923076923 %   (contra x=2)</pre>
+        </div>
+        <div class="callout verified">
+          <div class="callout-label">Por qué vale la pena calcular los dos</div>
+          <p>
+            El error <strong>estimado</strong> es el único que existe en un problema real (nunca
+            conocés la raíz exacta de antemano) — es la garantía práctica de que "ya convergió lo
+            suficiente". El error <strong>exacto</strong> solo se puede calcular en ejercicios de
+            práctica, y sirve para confirmar que el estimado no está mintiendo: en el ejemplo de
+            Newton-Raphson de arriba, el error estimado (73%) es mucho más pesimista que el exacto
+            (7.7%) en la primera iteración — son cantidades distintas, no hay por qué esperar que
+            coincidan, sobre todo lejos de la raíz.
+          </p>
+        </div>
+
+        <div class="callout note">
+          <div class="callout-label">Ojo con qué pide cada enunciado, palabra por palabra</div>
+          <p>
+            No todos los ejercicios piden las cuatro variantes. Leer con cuidado si dice "error",
+            "error absoluto", "error porcentual" o "error exacto" a secas — cada palabra extra
+            cambia cuál de las cuatro fórmulas de arriba corresponde. Si el enunciado dice "error
+            exacto" sin la palabra "porcentual", es la versión <strong>absoluta</strong> (resta
+            simple, sin dividir ni multiplicar por 100) — no asumir automáticamente que es un
+            porcentaje.
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================== TRANSVERSAL: ERRORES DE C++ ===================== -->
+    <div class="chapter">
+      <div class="chapter-label">Transversal — errores recurrentes en C++</div>
+      <section class="topic" id="errores-comunes" style="border-bottom:none; padding-bottom:0;">
+        <p>Cosas que se repitieron en más de un método, vale la pena tenerlas de checklist antes de entregar cualquier ejercicio:</p>
+        <ol>
+          <li><strong>1-indexado vs 0-indexado.</strong> El pseudocódigo de clase arranca los índices en 1; los arrays de C++ arrancan en 0. Revisar siempre el <em>punto de arranque</em> de cada loop (no solo el límite superior).</li>
+          <li><strong><code>&&</code>, no <code>||</code>, en la condición de corte.</strong> "Seguir iterando mientras no convergió <strong>y</strong> no me pasé del máximo de iteraciones" es una condición con <code>&&</code>. Con <code>||</code> el tope de iteraciones deja de funcionar como salvaguarda.</li>
+          <li><strong>Inicializar las variables de "valor anterior"</strong> (<code>c_viejo</code>, <code>x_viejo</code>) antes de usarlas por primera vez — si no, el primer error calculado es basura de memoria.</li>
+          <li><strong>Guardas de división por cero</strong> antes de dividir: el pivote en Gauss/Jacobi, la derivada en Newton, el denominador en secante.</li>
+          <li><strong>Guardar valores absolutos donde corresponde</strong> (<code>fabs(...)</code>) — comparar o acumular un valor con signo cuando la lógica pide magnitud es una fuente de bugs difícil de ver a simple vista.</li>
+          <li>
+            <strong><code>cout</code> trunca a 6 cifras significativas por default</strong> — si la
+            tolerancia es más estricta que eso (ej. <code>tol=1e-12</code>), el cálculo interno ya
+            tiene esa precisión, pero no se ve en pantalla a menos que agregues
+            <code>#include &lt;iomanip&gt;</code> y <code>cout &lt;&lt; fixed &lt;&lt; setprecision(N)</code>
+            antes de imprimir. Ojo con el sentido inverso: si la tolerancia es floja (ej.
+            <code>1e-5</code> o <code>1e-6</code>), <strong>no</strong> forzar más decimales en el
+            print — mostrarías dígitos que el cálculo no garantiza como correctos. La precisión que
+            se imprime tiene que ser consistente con la tolerancia que realmente se usó para
+            calcular, ni de más ni de menos.
+          </li>
+          <li>
+            <strong>Un bug en una rama de código que nunca se ejecuta no se nota</strong> — el
+            ejemplo real: el signo del determinante en Gauss estaba mal (faltaba compensar los
+            swaps de fila del pivoteo), pero como ningún sistema anterior necesitaba pivotear de
+            verdad, esa rama nunca corrió y el bug quedó escondido varios ejercicios. Se destapó
+            recién con un caso que <em>forzaba</em> el pivoteo. Vale la pena, al probar un
+            programa, buscar a propósito un caso que dispare cada rama del código (pivoteo,
+            matriz singular, semilla que hace fallar el chequeo de derivada, etc.), no solo el
+            caso fácil que "anda a la primera".
+          </li>
+        </ol>
+      </section>
+    </div>
+  </main>
+
+  <footer>Apuntes de Métodos Numéricos — actualizado a medida que avanza la cursada.</footer>
+</div>
+
+</body></html>
