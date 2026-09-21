@@ -58,7 +58,8 @@ void biseccion() {
     double a, b, c, c_viejo, fa, fb, fc, error, error_porcentual;
     int iter = 0, max_iter = 100;
     double tol = 1e-8;
-    auto f = [](double x) { return -15.3315 + 58.6036*x - 74.2202*x*x + 30.9504*x*x*x; };
+    //auto f = [](double x) { return exp(x*x) - 2; };  // punto d: modelo ajustado (a=1,b=-2)
+    auto f = [](double x) { return -15.3315 + 58.6036*x - 74.2202*x*x + 30.9504*x*x*x; };  // punto e: polinomio de Lagrange del punto b
     cout << "Ingrese el intervalo [a, b]: ";
     cin >> a >> b;
 
