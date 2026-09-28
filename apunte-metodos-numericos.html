@@ -349,6 +349,7 @@
       <ul>
         <li><a href="#lagrange">Lagrange</a></li>
         <li><a href="#coeficientes-indeterminados">Coeficientes indeterminados</a></li>
+        <li><a href="#spline-cubico">Spline cúbico</a></li>
         <li><a href="#verificar-interpolacion">Cómo verificar el resultado</a></li>
       </ul>
     </div>
@@ -363,6 +364,13 @@
       </ul>
     </div>
     <div class="toc-group">
+      <div class="toc-heading">Integración numérica</div>
+      <ul>
+        <li><a href="#trapecio-simple">Trapecio simple</a></li>
+        <li><a href="#trapecio-compuesto">Trapecio compuesto</a></li>
+      </ul>
+    </div>
+    <div class="toc-group">
       <div class="toc-heading">Transversal</div>
       <ul>
         <li><a href="#guia-programas">Guía de programas (cuál usar)</a></li>
@@ -371,7 +379,7 @@
         <li><a href="#geogebra-portable">GeoGebra portable (Linux)</a></li>
       </ul>
     </div>
-    <div class="status">GeoGebra portable agregado — hasta acá entra el primer parcial.</div>
+    <div class="status">Spline cúbico e integración numérica agregados.</div>
   </nav>
 
   <main>
@@ -1409,6 +1417,92 @@ Si evaluamos en x_hat:
         </div>
       </section>
 
+      <section class="topic" id="spline-cubico">
+        <h2>Spline cúbico</h2>
+        <p>
+          Lagrange y coeficientes indeterminados usan <strong>un solo polinomio</strong> para
+          pasar por todos los puntos — con muchos datos, ese polinomio termina siendo de grado
+          alto y puede oscilar mucho entre los nodos (Runge). El spline cúbico evita esto:
+          en vez de un polinomio único, usa <strong>un cúbico distinto en cada tramo</strong>
+          entre nodos consecutivos, "cosidos" entre sí para que la curva completa se vea suave
+          — continua, con primera y segunda derivada también continuas (curva <code>C²</code>).
+        </p>
+
+        <div class="panel">
+          <div class="panel-label">Planteo</div>
+          <pre class="pseudo">(n+1) nodos (x0,y0),...,(xn,yn)  ->  n tramos  ->  n-1 puntos internos
+
+Tramo k:  F_k(x) = a_k*x^3 + b_k*x^2 + c_k*x + d_k     (k=0,...,n-1)
+
+4 incognitas por tramo (a_k,b_k,c_k,d_k)  ->  4n incognitas en total</pre>
+        </div>
+
+        <p>Para 4n incógnitas hacen falta 4n ecuaciones, armadas en 4 bloques:</p>
+        <div class="panel">
+          <pre class="pseudo">Bloque 1 (2n ecuaciones): cada tramo pasa por sus 2 puntos
+    F_k(x_k) = y_k        F_k(x_k+1) = y_k+1
+
+Bloque 2 (n-1 ecuaciones): la derivada 1ra coincide en cada nodo interno
+    F'_k(x_k+1) = F'_k+1(x_k+1)          k=0,...,n-2
+
+Bloque 3 (n-1 ecuaciones): la derivada 2da coincide en cada nodo interno
+    F''_k(x_k+1) = F''_k+1(x_k+1)        k=0,...,n-2
+
+Bloque 4 (2 ecuaciones): spline NATURAL -- curvatura cero en los extremos
+    F''_0(x_0) = 0          F''_n-1(x_n) = 0
+
+Total: 2n + (n-1) + (n-1) + 2 = 4n ecuaciones ✓</pre>
+        </div>
+        <p>
+          Se arma la matriz <code>A[4n][4n]</code> y el vector <code>b[4n]</code>, se resuelve con
+          Eliminación Gaussiana (mismo Gauss + pivoteo de siempre), y el resultado <code>z</code>
+          son los <code>4n</code> coeficientes: <code>z[4k]=a_k</code>, <code>z[4k+1]=b_k</code>,
+          <code>z[4k+2]=c_k</code>, <code>z[4k+3]=d_k</code>. Para interpolar en un punto
+          <code>x̂</code>, primero hay que ubicar en qué tramo cae (cuál <code>k</code> cumple
+          <code>x_k &lt; x̂ &lt; x_k+1</code>) y evaluar <code>F_k(x̂)</code> con esos 4
+          coeficientes.
+        </p>
+
+        <div class="callout verified">
+          <div class="callout-label">Ejemplo resuelto y verificado: 3 puntos, 2 tramos (8 incógnitas)</div>
+          <p><code>(0,1), (1,3), (2,2)</code>. Con <code>d0=1</code> y <code>b0=0</code> saliendo directo de dos de las ecuaciones del Bloque 1 y 4, el resto del sistema 8×8 da:</p>
+          <div class="panel" style="margin:.6rem 0;">
+            <pre class="pseudo">Tramo 0 [0,1]:  F0(x) = -0.75x^3 + 2.75x + 1
+Tramo 1 [1,2]:  F1(x) =  0.75x^3 - 4.5x^2 + 7.25x - 0.5</pre>
+          </div>
+          <p style="margin-top:.5rem;">
+            Chequeo rápido: <code>F0(1)=3=F1(1)</code> ✓ (continuidad), <code>F0'(1)=F1'(1)=0.5</code> ✓,
+            <code>F0''(1)=F1''(1)=-4.5</code> ✓, y <code>F0''(0)=0</code>, <code>F1''(2)=0</code> ✓
+            (spline natural). Interpolando: <code>F(0.5)=2.28125</code>, <code>F(1.5)=2.78125</code>.
+          </p>
+        </div>
+
+        <div class="callout warn">
+          <div class="callout-label">Ojo cuando los datos abarcan muchos órdenes de magnitud</div>
+          <p>
+            Si el eje <code>x</code> tiene valores desde <code>0,2</code> hasta <code>20000</code>
+            (5 órdenes de magnitud), un spline en escala lineal se porta mal — puede dar valores
+            interpolados sin sentido físico (hasta negativos, en un caso real con un coeficiente de
+            arrastre que evaluado dio <code>-2118</code>). La solución es trabajar en escala
+            <strong>logarítmica</strong>: armar la tabla con <code>log₁₀(x)</code> (y muchas veces
+            también <code>log₁₀(y)</code>, si <code>y</code> también abarca varios órdenes de
+            magnitud) antes de armar el spline, interpolar ahí, y deshacer el logaritmo al final
+            (<code>y = 10^resultado</code>) para volver a las unidades originales.
+          </p>
+        </div>
+
+        <div class="callout note">
+          <div class="callout-label">Para tabular datos no equiespaciados</div>
+          <p>
+            Varios métodos (como el trapecio compuesto, más abajo) necesitan los puntos
+            <strong>equiespaciados</strong>. Si la tabla que te dan no lo está, una salida es usar
+            el spline cúbico para generar una tabla nueva, equiespaciada, evaluando el spline en
+            los puntos parejos que hagan falta — el spline pasa exacto por los datos originales,
+            así que la tabla nueva sigue siendo fiel a los datos reales.
+          </p>
+        </div>
+      </section>
+
       <section class="topic" id="verificar-interpolacion" style="border-bottom:none; padding-bottom:0;">
         <h2>Cómo verificar que el resultado está bien</h2>
         <ol>
@@ -1712,6 +1806,222 @@ Mostrar r</pre>
       </section>
     </div>
 
+    <!-- ===================== CAPÍTULO 5 ===================== -->
+    <div class="chapter">
+      <div class="chapter-label">Capítulo 5 — Integración numérica</div>
+
+      <section class="topic" id="trapecio-simple">
+        <h2>Trapecio simple <span class="tag">Newton-Cotes, grado 1</span></h2>
+        <p>
+          Las fórmulas de Newton-Cotes reemplazan <code>F(x)</code> por un polinomio
+          <code>P<sub>n</sub>(x)</code> que sea fácil de integrar, y calculan
+          <code>∫P<sub>n</sub>(x)dx</code> en vez de <code>∫F(x)dx</code>. El trapecio es el caso
+          más simple: <code>P₁(x)</code> es una <strong>recta</strong> entre
+          <code>(a,F(a))</code> y <code>(b,F(b))</code> — el área bajo esa recta es la de un
+          trapecio.
+        </p>
+        <div class="panel">
+          <div class="formula">I&nbsp;≈&nbsp;<span class="frac"><span class="num">b − a</span><span class="den">2</span></span>&nbsp;·&nbsp;(F(a) + F(b))</div>
+        </div>
+
+        <h3>Error</h3>
+        <div class="panel">
+          <div class="formula">e&nbsp;=&nbsp;<span class="frac"><span class="num">−1</span><span class="den">12</span></span>·F''(c)·(b−a)³&nbsp;&nbsp;&nbsp;&nbsp;c ∈ [a,b]</div>
+        </div>
+        <ul>
+          <li>Cuanto más grande el intervalo <code>(b−a)</code>, más grande el error — crece con el cubo.</li>
+          <li>Si <code>F''=0</code> (F es una recta), el error es cero — tiene sentido: una recta se integra exacto con otra recta.</li>
+        </ul>
+
+        <h3>Ejemplo paso a paso, a mano</h3>
+        <p><code>F(x) = x² + 1</code>, integrar en <code>[0, 3]</code>.</p>
+        <div class="panel">
+          <pre class="pseudo">Integral exacta (para comparar):
+  ∫(x²+1)dx de 0 a 3 = [x³/3 + x] de 0 a 3 = 27/3 + 3 = 12
+
+Trapecio simple:
+  F(a)=F(0)=1      F(b)=F(3)=10
+  I ≈ (3-0)/2 · (1+10) = 1.5 · 11 = 16.5
+
+Error exacto:
+  |Iexacta - Iaprox| = |12 - 16.5| = 4.5
+  error porcentual = 4.5/12 × 100 = 37.5%
+
+Error aproximado (formula del error):
+  F''(x) = 2  (constante, F es cuadratica)
+  e = -1/12 · 2 · 3³ = -54/12 = -4.5   ->  |e| = 4.5
+
+  Coincide EXACTO con el error real -- pasa porque F'' es constante
+  (no depende de c), asi que la formula del error deja de ser una
+  cota aproximada y da el valor exacto.</pre>
+        </div>
+        <div class="callout warn">
+          <div class="callout-label">37,5% de error — mucho para un intervalo tan chico</div>
+          <p>
+            El trapecio simple usa un único trapecio para todo <code>[a,b]</code> — cuanto más se
+            curve la función real adentro de ese intervalo, peor la aproximación. La solución
+            (siguiente sección): partir <code>[a,b]</code> en varios subintervalos más chicos.
+          </p>
+        </div>
+      </section>
+
+      <section class="topic" id="trapecio-compuesto" style="border-bottom:none; padding-bottom:0;">
+        <h2>Trapecio compuesto</h2>
+        <p>
+          Se parte <code>[a,b]</code> en <code>n</code> subintervalos iguales de ancho
+          <code>h=(b-a)/n</code>, se aplica el trapecio simple a cada uno, y se suman. Los
+          extremos internos se cuentan dos veces (son el borde derecho de un trapecio y el
+          izquierdo del siguiente), por eso el <code>×2</code>:
+        </p>
+        <div class="panel">
+          <div class="formula">
+            I&nbsp;≈&nbsp;<span class="frac"><span class="num">b − a</span><span class="den">2n</span></span>&nbsp;·&nbsp;
+            ( F(a) + F(b) + 2·Σ<sub>i=1</sub><sup>n−1</sup> F(x<sub>i</sub>) )
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-label">Error</div>
+          <div class="formula">e&nbsp;=&nbsp;<span class="frac"><span class="num">−1</span><span class="den">12</span></span>·F''(c)·<span class="frac"><span class="num">(b−a)³</span><span class="den">n²</span></span></div>
+        </div>
+        <p>El error se achica con <code>1/n²</code> — duplicar la cantidad de subintervalos divide el error aproximadamente por 4.</p>
+
+        <h3>Ejemplo paso a paso, a mano (mismo problema, n=2)</h3>
+        <p><code>F(x) = x² + 1</code>, <code>[0,3]</code>, ahora con 2 subintervalos.</p>
+        <div class="panel">
+          <pre class="pseudo">h = (3-0)/2 = 1.5
+x0=0, x1=1.5, x2=3
+F(x0)=F(0)=1      F(x1)=F(1.5)=3.25      F(x2)=F(3)=10
+
+I ≈ (h/2)·(F(x0) + 2·F(x1) + F(x2))
+  = (1.5/2)·(1 + 2×3.25 + 10)
+  = 0.75 · 17.5
+  = 13.125
+
+Error exacto:
+  |12 - 13.125| = 1.125
+  error porcentual = 1.125/12 × 100 = 9.375%</pre>
+        </div>
+        <div class="callout verified">
+          <div class="callout-label">n=1 vs. n=2: el error cayó de 37,5% a 9,375%</div>
+          <p>
+            Justo lo que predice la fórmula del error (<code>∝ 1/n²</code>): al duplicar
+            <code>n</code>, el error bajó a más o menos un cuarto (<code>37,5/4 ≈ 9,4</code>).
+          </p>
+        </div>
+
+        <h3>Pseudocódigo</h3>
+        <div class="panel">
+          <div class="panel-label">Con función definida en el código</div>
+          <pre class="pseudo">Definir F(x)
+Ingresar a, b
+Ingresar el numero de subintervalos (n)     ; n=1 -> trapecio simple
+
+suma = F(a) + F(b)
+h = (b-a)/n
+Do i = 1,...,n-1
+    x = a + i*h
+    suma = suma + 2*F(x)
+end Do
+I = (h/2) * suma
+
+Mostrar resultado (I)</pre>
+        </div>
+        <div class="panel">
+          <div class="panel-label">Con tabla de datos (equiespaciados, o generados con spline si no lo están)</div>
+          <pre class="pseudo">Leer los datos de archivo (x[n+1], y[n+1])
+
+Verificar si estan equiespaciados:  h = (x[n]-x[0])/n
+Do i = 0,...,n-1
+    if (x[i+1] - x[i] != h) -> "los puntos no estan equiespaciados", temp=1
+end Do
+
+if (temp = 1)                          ; no equiespaciados -> resamplear con spline
+    Do i = 0,...,n
+        xp[i] = x[0] + i*h
+        yp[i] = Spline(xp[i])
+    end Do
+else                                    ; ya equiespaciados -> usar tal cual
+    Do i = 0,...,n
+        xp[i] = x[i]
+        yp[i] = y[i]
+    end Do
+end if
+
+suma = yp[n] + yp[0]
+Do i = 1,...,n-1
+    suma = suma + 2*yp[i]
+end Do
+I = (h/2) * suma
+
+Mostrar resultado (I)</pre>
+        </div>
+        <div class="callout verified">
+          <div class="callout-label">Código verificado: trapecio.cpp</div>
+          <p>Implementa los dos pseudocódigos de arriba (un menú con las dos opciones). Chequeado contra el ejemplo a mano:</p>
+          <ul>
+            <li>Con función, <code>n=1</code>: <code>I=16.5</code> ✓. Con <code>n=2</code>: <code>I=13.125</code> ✓ — exacto a lo calculado arriba.</li>
+            <li>Con tabla ya equiespaciada (<code>x=0,1,2,3</code>): usa los datos tal cual, sin pasar por el spline.</li>
+            <li>Con tabla <strong>no</strong> equiespaciada (<code>x=0, 0.5, 2, 3</code>): avisa que no están equiespaciados, genera una tabla nueva con el spline cúbico natural, y da <code>I=12.4437</code> — verificado también contra una implementación independiente del mismo cálculo, coincide exacto.</li>
+          </ul>
+        </div>
+
+        <h3>Problemas de aplicación: puntos a tener en cuenta</h3>
+        <p>
+          El trapecio compuesto en sí es directo una vez que se entiende — donde realmente aparecen
+          los errores es en el paso previo, armar bien qué tabla integrar. Algunas cosas que salieron
+          en la práctica:
+        </p>
+
+        <div class="callout warn">
+          <div class="callout-label">El programa integra ∫y dx tal cual — las constantes físicas se aplican DESPUÉS, a mano</div>
+          <p>
+            Si la fórmula es, por ejemplo, <code>Δt = m·∫(V/P)dV</code>, el programa solo calcula la
+            integral (<code>∫(V/P)dV</code>) — no conoce la masa <code>m</code> ni ninguna otra
+            constante del problema. Hay que multiplicar el resultado por esa constante aparte, a mano,
+            después de leer el número que imprime la consola.
+          </p>
+        </div>
+
+        <div class="callout warn">
+          <div class="callout-label">Revisar unidades ANTES de armar la tabla, no después</div>
+          <p>
+            Caso real: una fórmula física pedía <code>P</code> en Watts, pero la tabla del enunciado
+            venía en <code>kW</code>. Integrar con los <code>kW</code> tal cual daba un resultado
+            1000 veces más grande de lo que correspondía — nada en el programa "avisa" de este
+            error, porque no sabe qué unidades tenían que ser. Conviene escribir las unidades de
+            cada columna al lado de la tabla antes de tipear los números, y confirmar que coinciden
+            con las que pide la fórmula.
+          </p>
+        </div>
+
+        <div class="callout warn">
+          <div class="callout-label">El rango de la tabla tiene que coincidir con los límites de integración pedidos</div>
+          <p>
+            Si la fórmula dice <code>∫[0 a ε_r]</code> pero el primer dato de la tabla está en
+            <code>ε=0.001</code> (no en <code>ε=0</code> exacto), integrar tal cual arranca un poco
+            tarde y el resultado queda incompleto. Si hay una razón física para saber el valor en el
+            límite exacto (acá, <code>σ=0</code> cuando <code>ε=0</code> — el material no tiene
+            tensión con deformación nula, así arranca cualquier curva tensión-deformación), conviene
+            agregar ese punto a la tabla antes de integrar, en vez de conformarse con el primer dato
+            disponible.
+          </p>
+        </div>
+
+        <div class="callout note">
+          <div class="callout-label">El spline puede "pasarse de rosca" con cambios muy bruscos en los datos</div>
+          <p>
+            Con una caída muy pronunciada entre dos puntos consecutivos (ej. una tensión que se
+            desploma justo antes de la rotura de un material), el spline cúbico natural que resamplea
+            la tabla no equiespaciada puede sobrepasar el rango real de los datos en esa zona —
+            picos más altos o valles más bajos que cualquier dato de la tabla original. No es un bug,
+            es una limitación esperable del método con datos así de abruptos — el resultado sigue
+            siendo una aproximación razonable, pero vale la pena saber que ahí es donde más error se
+            puede estar colando.
+          </p>
+        </div>
+      </section>
+    </div>
+
     <!-- ===================== TRANSVERSAL: GUIA DE PROGRAMAS ===================== -->
     <div class="chapter">
       <div class="chapter-label">Transversal — guía de programas</div>
@@ -1828,6 +2138,11 @@ Mostrar r</pre>
                 <td>Como <code>lagrangeFuncion.cpp</code> (se conoce <code>f(x)</code>, calcula error exacto), pero los nodos vienen dados puntualmente en un archivo (no equiespaciados). Cubre en una corrida: armar el polinomio, evaluar+error en un punto, y exportar la grilla de error para graficar.</td>
                 <td>Se conoce la <code>f(x)</code> real, pero los nodos son una tabla específica del enunciado, no equiespaciados a elección.</td>
               </tr>
+              <tr>
+                <td><code>splineCubico.cpp</code></td>
+                <td>Spline cúbico natural: arma el sistema <code>4n×4n</code> (pasar por los puntos + continuidad de 1ra y 2da derivada + curvatura cero en los extremos) y lo resuelve con Gauss. También sirve como generador de tablas equiespaciadas (evaluando el spline en puntos parejos) para otros métodos que lo necesiten, como el trapecio compuesto.</td>
+                <td>Muchos puntos y el enunciado pide específicamente "spline cúbico" — o cuando un polinomio único (Lagrange) oscilaría demasiado.</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1851,6 +2166,20 @@ Mostrar r</pre>
                 <td><code>evaluarAjuste.cpp</code></td>
                 <td>Complemento de <code>regresionFuncionesBase.cpp</code>: NO arma ni resuelve ningún sistema — solo recibe <code>a0, a1</code> ya calculados (a mano, o resolviendo el sistema aparte con <code>eliminacionGausseana.cpp</code>) y evalúa <code>F(x)</code> contra los puntos para dar <code>St, Sr, r</code>.</td>
                 <td>El enunciado pide explícitamente plantear el sistema a mano y resolverlo con Gauss (mostrando esa cuenta), y recién después evaluar el ajuste — separa en dos pasos lo que <code>regresionFuncionesBase.cpp</code> hace en uno solo.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Integracion/</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Archivo</th><th>Qué hace</th><th>Cuándo usarlo</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><code>trapecio.cpp</code></td>
+                <td>Menú con trapecio simple/compuesto: opción 1 con <code>f(x)</code> definida en el código, opción 2 con tabla de datos desde archivo. La opción 2 detecta si los puntos no están equiespaciados y, en ese caso, genera una tabla equiespaciada nueva usando <code>splineCubico.cpp</code> antes de integrar.</td>
+                <td>Cualquier ejercicio de integración numérica por trapecio. <code>n=1</code> en la opción 1 da el trapecio simple; no hace falta un archivo aparte para eso.</td>
               </tr>
             </tbody>
           </table>
