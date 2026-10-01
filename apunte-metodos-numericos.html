@@ -368,6 +368,15 @@
       <ul>
         <li><a href="#trapecio-simple">Trapecio simple</a></li>
         <li><a href="#trapecio-compuesto">Trapecio compuesto</a></li>
+        <li><a href="#simpson-13">Simpson 1/3</a></li>
+        <li><a href="#gauss-legendre">Cuadratura de Gauss-Legendre</a></li>
+      </ul>
+    </div>
+    <div class="toc-group">
+      <div class="toc-heading">Derivación numérica <span style="color:var(--red); font-weight:600;">(no entra)</span></div>
+      <ul>
+        <li><a href="#diferencias-finitas">Diferencias finitas</a></li>
+        <li><a href="#encarar-problemas-derivacion">Cómo encarar los problemas de aplicación</a></li>
       </ul>
     </div>
     <div class="toc-group">
@@ -379,7 +388,7 @@
         <li><a href="#geogebra-portable">GeoGebra portable (Linux)</a></li>
       </ul>
     </div>
-    <div class="status">Spline cúbico e integración numérica agregados.</div>
+    <div class="status">Derivación numérica agregada (capítulo 6, no entra en el primer parcial).</div>
   </nav>
 
   <main>
@@ -1865,7 +1874,7 @@ Error aproximado (formula del error):
         </div>
       </section>
 
-      <section class="topic" id="trapecio-compuesto" style="border-bottom:none; padding-bottom:0;">
+      <section class="topic" id="trapecio-compuesto">
         <h2>Trapecio compuesto</h2>
         <p>
           Se parte <code>[a,b]</code> en <code>n</code> subintervalos iguales de ancho
@@ -2017,6 +2026,304 @@ Mostrar resultado (I)</pre>
             es una limitación esperable del método con datos así de abruptos — el resultado sigue
             siendo una aproximación razonable, pero vale la pena saber que ahí es donde más error se
             puede estar colando.
+          </p>
+        </div>
+      </section>
+
+      <section class="topic" id="simpson-13">
+        <h2>Simpson 1/3 <span class="tag">Newton-Cotes, grado 2</span></h2>
+        <p>
+          En vez de una recta (trapecio), usa una <strong>parábola</strong> <code>P₂(x)</code> que
+          pasa por 3 puntos — el del medio, además de los dos extremos. Hacen falta
+          <code>x₀, x₁, x₂</code> igualmente espaciados, con <code>h=(b-a)/2</code>.
+        </p>
+        <div class="panel">
+          <div class="formula">I&nbsp;≈&nbsp;<span class="frac"><span class="num">h</span><span class="den">3</span></span>&nbsp;·&nbsp;(F(x₀) + 4·F(x₁) + F(x₂))</div>
+        </div>
+        <div class="panel">
+          <div class="panel-label">Error</div>
+          <div class="formula">e&nbsp;=&nbsp;<span class="frac"><span class="num">−(b−a)⁵</span><span class="den">2880</span></span>·F⁗(c)&nbsp;&nbsp;&nbsp;&nbsp;c ∈ [a,b]</div>
+        </div>
+        <div class="callout verified">
+          <div class="callout-label">Simpson 1/3 da exacto para polinomios de grado ≤ 3</div>
+          <p>
+            Mismo ejemplo de siempre: <code>F(x)=x²+1</code>, <code>[0,3]</code>. Con
+            <code>x₀=0, x₁=1.5, x₂=3</code>, <code>h=1.5</code>:
+          </p>
+          <div class="panel" style="margin:.6rem 0;">
+            <pre class="pseudo">F(x0)=1    F(x1)=3.25    F(x2)=10
+
+I ≈ (1.5/3)·(1 + 4×3.25 + 10) = 0.5·24 = 12
+
+Integral exacta = 12   ->   error = 0
+
+(F es grado 2, y Simpson 1/3 es exacto hasta grado 3 — por eso da
+perfecto, a diferencia del trapecio simple que en este mismo ejemplo
+daba 16.5, con 37.5% de error)</pre>
+          </div>
+        </div>
+
+        <h3>Simpson 1/3 compuesto</h3>
+        <p>
+          Igual idea que el trapecio compuesto: partir <code>[a,b]</code> en <code>n</code>
+          subintervalos iguales y aplicar Simpson a cada par consecutivo de tramos — por eso
+          <strong><code>n</code> tiene que ser PAR</strong> (cada "panel" de Simpson consume 2
+          subintervalos).
+        </p>
+        <div class="panel">
+          <div class="formula">
+            I&nbsp;≈&nbsp;<span class="frac"><span class="num">b−a</span><span class="den">3n</span></span>&nbsp;
+            [ F(a)+F(b) + 4·Σ<sub>i impar</sub>F(x<sub>i</sub>) + 2·Σ<sub>i par, interior</sub>F(x<sub>i</sub>) ]
+          </div>
+        </div>
+        <p>
+          El error decrece con <code>n⁴</code> (contra <code>n²</code> del trapecio) — por eso
+          Simpson compuesto suele necesitar muchos menos subintervalos para la misma precisión.
+        </p>
+
+        <div class="panel">
+          <div class="panel-label">Pseudocódigo (igual que trapecio, solo cambia el lazo que arma "suma")</div>
+          <pre class="pseudo">suma = F(a) + F(b)
+h = (b-a)/n
+
+Do i = 1,...,n/2 - 1
+    x = a + 2*i*h
+    suma = suma + 2*F(x) + 4*F(x-h)
+end Do
+suma = suma + 4*F(b-h)          ; falta x_(n-1), el ultimo impar
+
+I = (h/3) * suma</pre>
+        </div>
+        <div class="callout note">
+          <div class="callout-label">Con n=2 da exactamente Simpson simple</div>
+          <p>
+            Con <code>n=2</code>, el lazo <code>i=1,...,n/2-1</code> no ejecuta ninguna vuelta
+            (rango vacío) — igual que con trapecio, no hace falta código separado para el caso
+            simple.
+          </p>
+        </div>
+
+        <div class="callout warn">
+          <div class="callout-label">Simpson 3/8 existe, pero no se programa</div>
+          <p>
+            Usa un polinomio de grado 3 (4 puntos), <code>I=(3/8)h[F(x₀)+3F(x₁)+3F(x₂)+F(x₃)]</code>,
+            con un error de orden similar al de Simpson 1/3. Se vio en clase pero se aclaró
+            explícitamente que no hace falta programarlo — no se usa en los ejercicios de la
+            materia.
+          </p>
+        </div>
+
+        <div class="callout verified">
+          <div class="callout-label">Código verificado: simpson.cpp</div>
+          <p>Mismo esquema que <code>trapecio.cpp</code> (función / tabla de datos, con spline si no está equiespaciada). Chequeado:</p>
+          <ul>
+            <li><code>F(x)=x²+1</code> en <code>[0,3]</code>: <code>n=2</code> y <code>n=6</code> dan <code>I=12</code> exacto.</li>
+            <li><code>sen(x)</code> en <code>[0,π]</code> (no exacto para ningún grado): converge a <code>2</code> a medida que crece <code>n</code> — verificado además contra una implementación independiente, coincide número por número.</li>
+            <li>Con tabla no equiespaciada: genera la tabla equiespaciada con el spline cúbico (mismo mecanismo que trapecio) antes de aplicar la fórmula.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="topic" id="gauss-legendre" style="border-bottom:none; padding-bottom:0;">
+        <h2>Cuadratura de Gauss-Legendre <span class="tag">solo con F(x)</span></h2>
+        <p>
+          Los métodos de Newton-Cotes (trapecio, Simpson) siempre usan <code>a</code> y <code>b</code>
+          como puntos de evaluación, y solo ajustan los <em>pesos</em>. Gauss-Legendre hace algo
+          distinto: elige tanto los <strong>puntos</strong> como los <strong>pesos</strong> para
+          maximizar la precisión — a cambio, esos puntos ya no caen en <code>a</code> ni
+          <code>b</code>, sino en lugares "más convenientes" adentro del intervalo. Por esto mismo
+          <strong>solo sirve con una función <code>F(x)</code> definida</strong> — no con una tabla,
+          porque necesita evaluar <code>F</code> en puntos muy específicos que en general no
+          coinciden con ningún dato tabulado.
+        </p>
+
+        <h3>Fórmula de dos puntos</h3>
+        <div class="panel">
+          <div class="formula">I&nbsp;=&nbsp;∫<sub>−1</sub><sup>1</sup>F(x)dx&nbsp;≈&nbsp;C₀·F(x₀) + C₁·F(x₁)</div>
+        </div>
+        <p>
+          <code>C₀, C₁, x₀, x₁</code> salen de pedirle al método que ajuste <strong>exacto</strong>
+          las funciones <code>1, x, x², x³</code> (4 incógnitas, 4 ecuaciones — no lineales, pero
+          se resuelven a mano):
+        </p>
+        <div class="panel">
+          <pre class="pseudo">∫1 dx = C0+C1 = 2          ∫x dx = C0x0+C1x1 = 0
+∫x² dx = C0x0²+C1x1² = 2/3  ∫x³ dx = C0x0³+C1x1³ = 0
+
+Resolviendo:  C0 = C1 = 1     x0 = -1/√3 ≈ -0.5773503     x1 = +1/√3 ≈ 0.5773503
+
+  I ≈ F(-1/√3) + F(1/√3)</pre>
+        </div>
+
+        <h3>Cambio de variable para [a,b] cualquiera</h3>
+        <p>La fórmula base integra en <code>[-1,1]</code> — para un <code>[a,b]</code> genérico hay que transformar:</p>
+        <div class="panel">
+          <pre class="pseudo">x = ((b-a)*x' + (b+a)) / 2        dx = (b-a)/2 dx'
+
+∫[a,b] F(x)dx = (b-a)/2 · ∫[-1,1] F( ((b-a)x'+(b+a))/2 ) dx'
+              ≈ (b-a)/2 · Σ Ci·F( ((b-a)xi+(b+a))/2 )</pre>
+        </div>
+
+        <div class="callout verified">
+          <div class="callout-label">Ejemplo verificado: F(x)=x²+1, [0,3], 2 puntos</div>
+          <div class="panel" style="margin:.6rem 0;">
+            <pre class="pseudo">x0=-0.5773503 -> x=((3)(-0.5773503)+3)/2 = 0.6339746
+x1= 0.5773503 -> x=((3)( 0.5773503)+3)/2 = 2.3660254
+
+I ≈ (3/2)·( F(0.6339746) + F(2.3660254) ) = 12   (exacto)</pre>
+          </div>
+          <p style="margin-top:.5rem;">
+            Da exacto porque <code>x²+1</code> es grado 2, y el método de 2 puntos ajusta exacto
+            hasta grado <code>2·2-1=3</code>.
+          </p>
+        </div>
+
+        <h3>Con más puntos</h3>
+        <p>
+          Se generaliza a <code>I≈C₀F(x₀)+C₁F(x₁)+...+CₙF(xₙ)</code> con <code>(n+1)</code> puntos,
+          exacto hasta grado <code>2n-1</code>. Los <code>C</code> y <code>x</code> ya están
+          tabulados (Chapra, tabla 22.1) — no hace falta re-derivarlos cada vez:
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Puntos</th><th>Factores C</th><th>Argumentos x</th></tr></thead>
+            <tbody>
+              <tr><td>2</td><td><code>1.0000000, 1.0000000</code></td><td><code>∓0.5773503</code></td></tr>
+              <tr><td>3</td><td><code>0.5555556, 0.8888889, 0.5555556</code></td><td><code>∓0.7745967, 0</code></td></tr>
+              <tr><td>4</td><td><code>0.3478548, 0.6521452, 0.6521452, 0.3478548</code></td><td><code>∓0.8611363, ∓0.3399810</code></td></tr>
+              <tr><td>5</td><td><code>0.2369269, 0.4786287, 0.5688889, 0.4786287, 0.2369269</code></td><td><code>∓0.9061798, ∓0.5384693, 0</code></td></tr>
+              <tr><td>6</td><td><code>0.1713245, 0.3607616, 0.4679139, 0.4679139, 0.3607616, 0.1713245</code></td><td><code>∓0.9324695, ∓0.6612094, ∓0.2386192</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout verified">
+          <div class="callout-label">Código verificado: gaussLegendre.cpp</div>
+          <p>Switch con los 5 casos (2 a 6 puntos) de la tabla, cada uno con el cambio de variable ya resuelto. Chequeado con <code>sen(x)</code> en <code>[0,π]</code> (exacto=2): converge muchísimo más rápido que Simpson — con solo 4-5 puntos ya da <code>2.00000</code>, mientras que Simpson compuesto necesitaba <code>n=20</code> subintervalos para la misma precisión.</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================== CAPÍTULO 6 ===================== -->
+    <div class="chapter">
+      <div class="chapter-label">Capítulo 6 — Derivación numérica <span class="tag" style="color:var(--red); border-color:var(--red);">no entra en el parcial</span></div>
+
+      <section class="topic" id="diferencias-finitas">
+        <h2>Diferencias finitas</h2>
+        <div class="callout warn">
+          <div class="callout-label">Este capítulo no entra en el primer parcial</div>
+          <p>
+            Queda documentado para más adelante en la cursada — no hace falta estudiarlo para el
+            parcial que cubre Localización de raíces, Sistemas de ecuaciones, Interpolación, Ajuste
+            de curvas e Integración numérica (capítulos 1 a 5).
+          </p>
+        </div>
+        <p>
+          Dado un conjunto de puntos <code>(x_i, f(x_i))</code>, la diferencia <strong>centrada</strong>
+          aproxima la derivada usando un punto a cada lado:
+        </p>
+        <div class="panel">
+          <div class="formula">
+            f'(x)&nbsp;=&nbsp;<span class="frac"><span class="num">f(x+h) − f(x−h)</span><span class="den">2h</span></span>&nbsp;+&nbsp;O(h²)
+          </div>
+        </div>
+        <div class="callout warn">
+          <div class="callout-label">No sirve en los extremos de la tabla</div>
+          <p>
+            En <code>x₀</code> haría falta <code>f(x₋₁)</code> (no existe), y en <code>xₙ</code> haría
+            falta <code>f(x_{n+1})</code> (tampoco existe). Para esos dos puntos hace falta una
+            fórmula <strong>descentrada</strong> — hacia adelante en <code>x₀</code>, hacia atrás en
+            <code>xₙ</code> — que mantenga el mismo orden de error <code>O(h²)</code> (si se usara la
+            diferencia progresiva simple de 2 puntos, el error bajaría a <code>O(h)</code>, peor).
+          </p>
+        </div>
+        <div class="panel">
+          <div class="panel-label">Forward (en x₀) y backward (en xₙ), ambas O(h²)</div>
+          <pre class="pseudo">f'(x0) =  (4f(x0+h) − f(x0+2h) − 3f(x0)) / (2h)     + O(h²)
+f'(xn) = (−4f(xn−h) + f(xn−2h) + 3f(xn)) / (2h)     + O(h²)</pre>
+        </div>
+        <p>
+          Salen de combinar los desarrollos de Taylor de <code>f(x+h)</code> y <code>f(x+2h)</code>
+          (o <code>f(x−h)</code> y <code>f(x−2h)</code> para la de atrás): multiplicando la primera
+          expansión por 4 y restando la segunda, el término en <code>h²</code> se cancela, y lo que
+          queda despejado para <code>f'(x)</code> mantiene el mismo orden <code>O(h²)</code> que la
+          centrada — por eso se usa esta combinación específica, y no una diferencia progresiva
+          cualquiera.
+        </p>
+      </section>
+
+      <section class="topic" id="encarar-problemas-derivacion" style="border-bottom:none; padding-bottom:0;">
+        <h2>Cómo encarar los problemas de aplicación</h2>
+        <p>
+          Estos problemas casi nunca piden aplicar la fórmula y ya — el trabajo real está en
+          reconocer qué variante usar y cómo armar los datos antes de derivar. Guía rápida por tipo
+          de situación:
+        </p>
+
+        <div class="callout note">
+          <div class="callout-label">1. Mirar primero si el punto es interior o extremo de la tabla</div>
+          <p>
+            Antes de elegir fórmula: ¿el punto donde hay que derivar tiene vecinos a los dos lados en
+            la tabla? Si sí, centrada. Si es el primer o último dato, forward/backward. Es el primer
+            chequeo, siempre — no asumir que "derivar" significa automáticamente la centrada.
+          </p>
+        </div>
+
+        <div class="callout note">
+          <div class="callout-label">2. Si dan una función analítica para comparar</div>
+          <p>
+            Derivarla a mano (con las reglas de siempre — regla de la cadena, producto, etc.),
+            evaluar en el mismo punto de la tabla, y comparar contra el resultado numérico. La
+            diferencia entre los dos <em>es</em> el error de truncamiento real de la fórmula
+            <code>O(h²)</code> — no hace falta ninguna fórmula de error aparte para esto, con
+            comparar los dos números alcanza.
+          </p>
+        </div>
+
+        <div class="callout note">
+          <div class="callout-label">3. Integrales tipo "centro de masa / centro de presión"</div>
+          <p>
+            Una expresión de la forma <code>∫x·f(x)dx / ∫f(x)dx</code> son en realidad
+            <strong>dos integrales separadas</strong> — se calcula cada una por su cuenta (mismo
+            método, misma tabla resampleada si hace falta) y se dividen los dos resultados al final.
+            No es una fórmula especial nueva, es aplicar integración numérica dos veces.
+          </p>
+        </div>
+
+        <div class="callout warn">
+          <div class="callout-label">4. Antes de usar Gauss-Legendre con una tabla de datos</div>
+          <p>
+            Gauss-Legendre necesita evaluar la función en puntos puntuales que en general <strong>no
+            coinciden</strong> con ningún dato medido — por eso hace falta primero una función
+            continua (ajuste o interpolación) para poder evaluarla ahí. Con pocos datos
+            experimentales y sin conocer la forma real de la curva, forzar ese ajuste global es más
+            riesgoso que integrar directo sobre la tabla con trapecio/Simpson (resampleando con
+            spline si no está equiespaciada, como ya hacen <code>trapecio.cpp</code>/<code>simpson.cpp</code>).
+            Pensar: ¿esto necesita de verdad Gauss-Legendre, o alcanza con lo que ya tengo?
+          </p>
+        </div>
+
+        <div class="callout note">
+          <div class="callout-label">5. Cuando los datos no son directamente la cantidad a derivar</div>
+          <p>
+            Si el enunciado da una tabla de cantidades intermedias (ángulos, mediciones) y pide
+            derivar otra cosa (una posición, una velocidad), primero hay que <strong>despejar las
+            relaciones geométricas/algebraicas</strong> para esa cantidad, evaluarlas en cada fila de
+            la tabla para armar una tabla <em>nueva</em>, y recién ahí aplicar diferencias finitas
+            sobre esa tabla nueva — no sobre los datos crudos originales.
+          </p>
+        </div>
+
+        <div class="callout warn">
+          <div class="callout-label">6. Si piden una derivada segunda (aceleración) y solo hay fórmulas de 1ra</div>
+          <p>
+            Aplicar la misma fórmula de diferencias finitas <strong>dos veces seguidas</strong>:
+            primera vez sobre los datos originales (da la primera derivada en cada punto), segunda
+            vez sobre ese resultado (da la segunda derivada). Si la variable independiente real es el
+            tiempo pero los datos están en función de otra variable (un ángulo, por ejemplo) con
+            velocidad angular <code>ω</code> constante, no olvidar la regla de la cadena:
+            <code>d²x/dt² = (d²x/dθ²)·ω²</code> (el término con <code>d²θ/dt²</code> desaparece
+            porque <code>ω</code> es constante).
           </p>
         </div>
       </section>
@@ -2180,6 +2487,16 @@ Mostrar resultado (I)</pre>
                 <td><code>trapecio.cpp</code></td>
                 <td>Menú con trapecio simple/compuesto: opción 1 con <code>f(x)</code> definida en el código, opción 2 con tabla de datos desde archivo. La opción 2 detecta si los puntos no están equiespaciados y, en ese caso, genera una tabla equiespaciada nueva usando <code>splineCubico.cpp</code> antes de integrar.</td>
                 <td>Cualquier ejercicio de integración numérica por trapecio. <code>n=1</code> en la opción 1 da el trapecio simple; no hace falta un archivo aparte para eso.</td>
+              </tr>
+              <tr>
+                <td><code>simpson.cpp</code></td>
+                <td>Mismo esquema que <code>trapecio.cpp</code> (función / tabla, con spline si no está equiespaciada), pero con la fórmula de Simpson 1/3. <code>n=2</code> da Simpson simple.</td>
+                <td>Cuando el enunciado pide Simpson 1/3 en vez de trapecio — converge más rápido (error en <code>n⁴</code>, no <code>n²</code>), pero <code>n</code> tiene que ser par.</td>
+              </tr>
+              <tr>
+                <td><code>gaussLegendre.cpp</code></td>
+                <td>Cuadratura de Gauss-Legendre, 2 a 6 puntos (tabla de Chapra). Solo función — no acepta tabla de datos.</td>
+                <td>El enunciado pide Gauss-Legendre específicamente, o cuando se necesita mucha precisión con pocos puntos (converge mucho más rápido que Simpson para funciones suaves).</td>
               </tr>
             </tbody>
           </table>

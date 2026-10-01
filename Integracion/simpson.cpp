@@ -4,8 +4,8 @@
 #include <cmath>
 using namespace std;
 
-void trapecioFuncion();
-void trapecioTabla();
+void simpsonFuncion();
+void simpsonTabla();
 vector<double> armarZSpline(const vector<double> &x, const vector<double> &y);
 double evaluarSpline(const vector<double> &x, const vector<double> &z, double xhat);
 
@@ -13,18 +13,18 @@ int main() {
     int opcion;
     do {
         cout << "Menu de opciones:" << endl;
-        cout << "1. Trapecio compuesto (funcion definida en el codigo)" << endl;
-        cout << "2. Trapecio compuesto (tabla de datos desde archivo)" << endl;
+        cout << "1. Simpson 1/3 compuesto (funcion definida en el codigo)" << endl;
+        cout << "2. Simpson 1/3 compuesto (tabla de datos desde archivo)" << endl;
         cout << "3. Salir" << endl;
         cout << "Seleccione una opcion: ";
         cin >> opcion;
 
         switch (opcion) {
             case 1:
-                trapecioFuncion();
+                simpsonFuncion();
                 break;
             case 2:
-                trapecioTabla();
+                simpsonTabla();
                 break;
             case 3:
                 cout << "Saliendo del programa." << endl;
@@ -37,11 +37,12 @@ int main() {
 }
 
 // ============================================================================
-// Opcion 1: pseudocodigo "con funcion". n=1 -> trapecio SIMPLE (el for de abajo
-// no ejecuta ninguna vuelta, i=1,...,0 es vacio). n>1 -> trapecio COMPUESTO.
-// Es la misma formula para los dos casos, no hace falta codigo separado.
+// Opcion 1: pseudocodigo "idem a trapecio, solo se modifica el lazo que
+// calcula suma" (asi lo dio la profesora). n=2 -> Simpson 1/3 SIMPLE (el for
+// de abajo no ejecuta ninguna vuelta, i=1,...,0 es vacio). n>2 (PAR) ->
+// Simpson 1/3 COMPUESTO.
 // ============================================================================
-void trapecioFuncion() {
+void simpsonFuncion() {
     auto f = [](double x) { return sin(2*x) * exp(-x); }; // <-- ACA se elige el problema
 
     double a, b;
@@ -49,31 +50,31 @@ void trapecioFuncion() {
     cin >> a >> b;
 
     int n;
-    cout << "Ingrese el numero de subintervalos (n=1 -> trapecio simple, n>1 -> compuesto): ";
+    cout << "Ingrese el numero de subintervalos (n, debe ser PAR; n=2 -> Simpson simple): ";
     cin >> n;
-    if (n < 1) {
-        cerr << "n tiene que ser >= 1." << endl;
+    if (n < 2 || n % 2 != 0) {
+        cerr << "n tiene que ser PAR y >= 2." << endl;
         return;
     }
 
     double h = (b - a) / n;
     double suma = f(a) + f(b);
-    for (int i = 1; i <= n - 1; i++) {
-        double x = a + i * h;
-        suma = suma + 2 * f(x);
+    for (int i = 1; i <= n/2 - 1; i++) {
+        double x = a + 2*i*h;
+        suma = suma + 2*f(x) + 4*f(x - h);
     }
-    double I = (h / 2) * suma;
+    suma = suma + 4*f(b - h);
+    double I = (h/3) * suma;
 
     cout << "La integral aproximada es: I = " << I << endl;
 }
 
 // ============================================================================
-// Opcion 2: pseudocodigo "con tabla de datos". Si los puntos del archivo NO
-// estan equiespaciados, primero se genera una tabla equiespaciada evaluando
-// un spline cubico natural (el de splineCubico.cpp) en n+1 puntos parejos, y
-// se aplica el trapecio compuesto sobre esa tabla nueva.
+// Opcion 2: mismo pseudocodigo, pero con tabla de datos. Igual que en
+// trapecio.cpp: si los puntos no estan equiespaciados, se genera una tabla
+// equiespaciada con el spline cubico natural antes de aplicar Simpson.
 // ============================================================================
-void trapecioTabla() {
+void simpsonTabla() {
     string nombreArchivo;
     cout << "Ingrese el nombre del archivo con los puntos (x y por linea): ";
     cin >> nombreArchivo;
@@ -93,16 +94,14 @@ void trapecioTabla() {
 
     int npuntos = (int)x.size();
     int n = npuntos - 1; // n subintervalos
-    if (n < 1) {
-        cerr << "Hacen falta al menos 2 puntos." << endl;
+    if (n < 2 || n % 2 != 0) {
+        cerr << "Simpson 1/3 necesita un numero PAR de subintervalos "
+             << "(o sea, una cantidad IMPAR de puntos, >=3)." << endl;
         return;
     }
 
     double h = (x[n] - x[0]) / n;
 
-    // Verificar si estan equiespaciados. OJO: comparar con "!=" exacto (como
-    // dice el pseudocodigo al pie de la letra) es fragil con numeros de punto
-    // flotante leidos de un archivo -- se usa una tolerancia chica en su lugar.
     bool equiespaciados = true;
     for (int i = 0; i < n; i++) {
         if (fabs((x[i+1] - x[i]) - h) > 1e-9) {
@@ -124,19 +123,22 @@ void trapecioTabla() {
         yp = y;
     }
 
-    double suma = yp[n] + yp[0];
-    for (int i = 1; i <= n - 1; i++) {
-        suma = suma + 2 * yp[i];
+    // Mismo lazo que en simpsonFuncion(), pero indexando el array yp en vez
+    // de evaluar F(x): yp[2i] hace de F(x), yp[2i-1] hace de F(x-h).
+    double suma = yp[0] + yp[n];
+    for (int i = 1; i <= n/2 - 1; i++) {
+        suma = suma + 2*yp[2*i] + 4*yp[2*i - 1];
     }
-    double I = (h / 2) * suma;
+    suma = suma + 4*yp[n - 1];
+    double I = (h/3) * suma;
 
     cout << "La integral aproximada es: I = " << I << endl;
 }
 
 // ============================================================================
-// Spline cubico natural (identico a Interpolacion/splineCubico.cpp): arma y
-// resuelve el sistema 4n x 4n con Gauss + pivoteo, y devuelve z (los 4n
-// coeficientes a_k,b_k,c_k,d_k de cada tramo).
+// Spline cubico natural (identico a Interpolacion/splineCubico.cpp y a
+// Integracion/trapecio.cpp): arma y resuelve el sistema 4n x 4n con Gauss +
+// pivoteo, y devuelve z (los 4n coeficientes a_k,b_k,c_k,d_k de cada tramo).
 // ============================================================================
 vector<double> armarZSpline(const vector<double> &x, const vector<double> &y) {
     int n = (int)x.size() - 1;
@@ -144,7 +146,6 @@ vector<double> armarZSpline(const vector<double> &x, const vector<double> &y) {
     vector<vector<double>> A(m, vector<double>(m, 0.0));
     vector<double> b(m, 0.0);
 
-    // Bloque 1: F_k(x_k)=y_k, F_k(x_k+1)=y_k+1
     for (int k = 0; k < n; k++) {
         for (int j = 0; j <= 3; j++) {
             A[2*k][4*k + j]     = pow(x[k],   3 - j);
@@ -153,7 +154,6 @@ vector<double> armarZSpline(const vector<double> &x, const vector<double> &y) {
         b[2*k]     = y[k];
         b[2*k + 1] = y[k+1];
     }
-    // Bloque 2: continuidad de F'
     for (int k = 0; k <= n - 2; k++) {
         int i = 2*n + k;
         for (int j = 0; j <= 2; j++) {
@@ -161,7 +161,6 @@ vector<double> armarZSpline(const vector<double> &x, const vector<double> &y) {
             A[i][4*(k+1) + j] = -(3 - j) * pow(x[k+1], 2 - j);
         }
     }
-    // Bloque 3: continuidad de F''
     for (int k = 0; k <= n - 2; k++) {
         int i = 3*n - 1 + k;
         A[i][4*k]         = 3 * x[k+1];
@@ -169,13 +168,11 @@ vector<double> armarZSpline(const vector<double> &x, const vector<double> &y) {
         A[i][4*(k+1)]     = -3 * x[k+1];
         A[i][4*(k+1) + 1] = -1.0;
     }
-    // Bloque 4: spline natural, F''=0 en los extremos
     A[4*n - 2][0] = 3 * x[0];
     A[4*n - 2][1] = 1.0;
     A[4*n - 1][4*n - 4] = 3 * x[n];
     A[4*n - 1][4*n - 3] = 1.0;
 
-    // Eliminacion Gaussiana con pivoteo parcial
     for (int i = 0; i < m - 1; i++) {
         int piv = i;
         if (fabs(A[i][i]) < 1e-9) {
@@ -203,10 +200,6 @@ vector<double> armarZSpline(const vector<double> &x, const vector<double> &y) {
     return z;
 }
 
-// Evalua el spline ya resuelto en un punto xhat. A diferencia de
-// splineCubico.cpp (que compara con < y > estrictos), aca la comparacion
-// incluye los extremos (<=, >=) porque necesitamos evaluar EXACTO en x[0] y
-// x[n] (los bordes de la tabla nueva equiespaciada).
 double evaluarSpline(const vector<double> &x, const vector<double> &z, double xhat) {
     int n = (int)x.size() - 1;
     for (int i = 0; i < n; i++) {
@@ -217,5 +210,5 @@ double evaluarSpline(const vector<double> &x, const vector<double> &z, double xh
             return z[4*i]*pow(xhat,3) + z[4*i+1]*pow(xhat,2) + z[4*i+2]*xhat + z[4*i+3];
         }
     }
-    return NAN; // xhat fuera del rango de la tabla
+    return NAN;
 }
