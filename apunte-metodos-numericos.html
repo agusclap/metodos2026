@@ -380,6 +380,14 @@
       </ul>
     </div>
     <div class="toc-group">
+      <div class="toc-heading">Ecuaciones diferenciales</div>
+      <ul>
+        <li><a href="#que-es-una-edo">Qué es una EDO</a></li>
+        <li><a href="#resolver-edo-a-mano">Resolver a mano (separación de variables)</a></li>
+        <li><a href="#metodos-numericos-edo">Euler, Heun y punto medio</a></li>
+      </ul>
+    </div>
+    <div class="toc-group">
       <div class="toc-heading">Transversal</div>
       <ul>
         <li><a href="#guia-programas">Guía de programas (cuál usar)</a></li>
@@ -388,7 +396,7 @@
         <li><a href="#geogebra-portable">GeoGebra portable (Linux)</a></li>
       </ul>
     </div>
-    <div class="status">Derivación numérica agregada (capítulo 6, no entra en el primer parcial).</div>
+    <div class="status">Ecuaciones diferenciales ordinarias agregadas (capítulo 7).</div>
   </nav>
 
   <main>
@@ -2329,6 +2337,252 @@ f'(xn) = (−4f(xn−h) + f(xn−2h) + 3f(xn)) / (2h)     + O(h²)</pre>
       </section>
     </div>
 
+    <!-- ===================== CAPÍTULO 7 ===================== -->
+    <div class="chapter">
+      <div class="chapter-label">Capítulo 7 — Ecuaciones diferenciales ordinarias</div>
+
+      <section class="topic" id="que-es-una-edo">
+        <h2>Qué es una EDO</h2>
+        <p>
+          Una ecuación diferencial es una ecuación donde la incógnita <strong>no es un número, es
+          una función</strong> — y la ecuación involucra esa función junto con sus derivadas.
+        </p>
+        <div class="panel">
+          <div class="formula">m&nbsp;<span class="frac"><span class="num">d²x</span><span class="den">dt²</span></span>&nbsp;+&nbsp;C&nbsp;<span class="frac"><span class="num">dx</span><span class="den">dt</span></span>&nbsp;+&nbsp;Kx&nbsp;=&nbsp;0</div>
+        </div>
+        <p>
+          Acá la incógnita es <code>x(t)</code>: <code>t</code> es la variable independiente,
+          <code>x</code> la dependiente. Si <code>x</code> depende de una sola variable y la
+          ecuación no tiene derivadas parciales (solo derivadas "normales", hasta cierto orden
+          <code>n</code>), se llama <strong>ecuación diferencial ordinaria (EDO) de orden
+          <code>n</code></strong> — el orden es el de la derivada más alta que aparece (en el
+          ejemplo de arriba, orden 2, por el <code>d²x/dt²</code>).
+        </p>
+        <div class="callout note">
+          <div class="callout-label">Propiedad clave</div>
+          <p>
+            Una EDO de orden <code>n</code> necesita <code>n</code> condiciones iniciales para
+            quedar completamente determinada (una posición inicial y una velocidad inicial, para
+            una de orden 2; solo una condición, para una de orden 1).
+          </p>
+        </div>
+
+        <h3>Cómo plantear una EDO a partir de un problema físico</h3>
+        <p>
+          <strong>Ejemplo:</strong> un cuerpo de masa <code>m=2kg</code> se mueve dentro de un
+          fluido que le ejerce una fuerza de resistencia <code>F=kv</code> (<code>v</code> =
+          velocidad, <code>k=5 Ns/m</code>). Con velocidad inicial <code>v₀=20 m/s</code> y
+          posición inicial <code>x₀=5m</code>, encontrar <code>x(t)</code>.
+        </p>
+        <div class="panel">
+          <pre class="pseudo">Ley de Newton:  F = m·a = m·d²x/dt²
+
+La fuerza de resistencia se opone al movimiento:  -kv = m·dv/dt   <- EDO de 1er orden para v(t)
+
+Como v = dx/dt, tambien dv/dt = d²x/dt², entonces:
+
+  -k·dx/dt = m·d²x/dt²                                           <- EDO de 2do orden para x(t)</pre>
+        </div>
+        <p>
+          La estrategia general: si la incógnita final es la posición pero la física te da una
+          relación con la velocidad, conviene resolver primero la EDO de la velocidad (más simple,
+          de 1er orden), y después integrar <code>v(t)</code> para obtener <code>x(t)</code> — en
+          vez de pelear directo con la ecuación de 2do orden.
+        </p>
+      </section>
+
+      <section class="topic" id="resolver-edo-a-mano">
+        <h2>Resolver a mano: separación de variables</h2>
+        <p>
+          Cuando una EDO de 1er orden <code>dy/dx = f(x,y)</code> se puede escribir con todos los
+          <code>x</code> de un lado y todos los <code>y</code> del otro, se integra cada lado por
+          separado. El truco para no arrastrar una constante de integración genérica: integrar
+          cada lado como integral <strong>definida</strong>, desde el valor inicial hasta el valor
+          genérico — así la condición inicial queda incorporada directamente.
+        </p>
+
+        <div class="callout verified">
+          <div class="callout-label">Ejemplo 1 — siguiendo con el cuerpo en el fluido</div>
+          <p><strong>Paso 1: resolver la EDO de la velocidad.</strong></p>
+          <div class="panel" style="margin:.6rem 0;">
+            <pre class="pseudo">-kv = m dv/dt
+-k/m dt = dv/v                              <- separado: t de un lado, v del otro
+
+∫[0,t] -k/m dt' = ∫[v0,v(t)] dv/v            <- integral definida, desde el dato inicial
+-k/m · t = ln( v(t)/v0 )
+
+→ v(t) = v0 · e^(-k/m · t) = 20·e^(-2.5t)    (k/m = 5/2 = 2.5)</pre>
+          </div>
+          <p><strong>Paso 2: integrar v(t) para obtener x(t).</strong></p>
+          <div class="panel" style="margin:.6rem 0;">
+            <pre class="pseudo">dx/dt = v(t)  →  ∫[x0,x(t)] dx = ∫[0,t] v0·e^(-k/m·t') dt'
+
+x(t) - x0 = v0 · (-m/k) · [e^(-k/m·t) - 1]
+
+→ x(t) = x0 + (v0·m/k) · (1 - e^(-k/m·t))</pre>
+          </div>
+          <p style="margin-top:.5rem;">Con los datos del problema (<code>x0=5, v0=20, m=2, k=5</code>): <code>x(t) = 5 + 8·(1 - e^(-2.5t))</code>.</p>
+        </div>
+
+        <div class="callout verified">
+          <div class="callout-label">Ejemplo 2 — otra EDO separable</div>
+          <p><code>dy/dx + 2xy = 0</code>, con <code>y(0)=1</code>.</p>
+          <div class="panel" style="margin:.6rem 0;">
+            <pre class="pseudo">dy/dx = -2xy
+dy/y = -2x dx
+
+∫[1,y(x)] dy/y = ∫[0,x] -2x' dx'
+ln(y(x)) - ln(1) = -x²
+ln(y(x)) = -x²
+
+→ y(x) = e^(-x²)</pre>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-label">Forma general</div>
+          <div class="formula">
+            <span class="frac"><span class="num">dy</span><span class="den">dx</span></span>&nbsp;=&nbsp;f(x,y)&nbsp;&nbsp;&nbsp;&nbsp;con&nbsp;&nbsp;y(x₀)=y₀
+          </div>
+        </div>
+        <div class="callout warn">
+          <div class="callout-label">No toda EDO es separable</div>
+          <p>
+            Por ejemplo <code>dy/dx = cos(xy)</code>, con <code>y(1)=3</code> — no hay forma de
+            despejar todos los <code>x</code> de un lado y los <code>y</code> del otro. Ahí no
+            alcanza con álgebra: hace falta resolverla <strong>numéricamente</strong> (los métodos
+            de la próxima sección).
+          </p>
+        </div>
+      </section>
+
+      <section class="topic" id="metodos-numericos-edo" style="border-bottom:none; padding-bottom:0;">
+        <h2>Métodos numéricos: Euler, Heun y punto medio</h2>
+        <p>
+          Los tres resuelven <code>dy/dx=f(x,y)</code>, <code>y(x0)=y0</code>, en un intervalo
+          <code>[x0,xF]</code>, dividido en <code>n</code> subintervalos de ancho
+          <code>h=(xF-x0)/n</code> — avanzan paso a paso desde <code>(x0,y0)</code>, estimando
+          cuánto sube o baja <code>y</code> en cada paso. La diferencia entre los tres está en
+          <strong>qué pendiente usan</strong> para avanzar.
+        </p>
+
+        <h3>Euler</h3>
+        <p>Usa la pendiente de la función <em>en el punto de partida</em> del paso:</p>
+        <div class="panel">
+          <div class="formula">y<sub>i+1</sub>&nbsp;=&nbsp;y<sub>i</sub>&nbsp;+&nbsp;h·F(x<sub>i</sub>,y<sub>i</sub>)</div>
+        </div>
+        <p>Error de truncamiento local <code>O(h²)</code> por paso — el más simple de los tres, y el menos preciso.</p>
+
+        <h3>Heun (predictor-corrector)</h3>
+        <p>
+          Promedia la pendiente en <code>x_i</code> con la pendiente en <code>x_{i+1}</code> — pero
+          para evaluar esta última hace falta <code>y_{i+1}</code>, que es justo lo que se está
+          buscando. Se resuelve estimándolo primero con un paso de Euler (la "predicción"), y
+          usando esa estimación para la corrección final:
+        </p>
+        <div class="panel">
+          <pre class="pseudo">yc = yi + h·F(xi,yi)                              <- prediccion (un paso de Euler)
+y(i+1) = yi + (h/2)·( F(xi,yi) + F(x(i+1), yc) )   <- correccion (promedio de pendientes)</pre>
+        </div>
+        <p>Error de truncamiento local <code>O(h³)</code> — un orden mejor que Euler.</p>
+
+        <div class="callout verified">
+          <div class="callout-label">Heun a mano — primeras 2 iteraciones (mismo problema: dy/dx=-2xy, y(0)=1, h=0.2)</div>
+          <div class="panel" style="margin:.6rem 0;">
+            <pre class="pseudo">Iteracion 1 (i=0): x0=0, y0=1
+  F(x0,y0) = -2·0·1 = 0
+  yc = y0 + h·F(x0,y0) = 1 + 0.2·0 = 1                    <- prediccion
+  F(x1,yc) = -2·0.2·1 = -0.4
+  y1 = y0 + (h/2)·(F(x0,y0)+F(x1,yc)) = 1 + 0.1·(0-0.4) = 0.96
+
+Iteracion 2 (i=1): x1=0.2, y1=0.96
+  F(x1,y1) = -2·0.2·0.96 = -0.384
+  yc = y1 + h·F(x1,y1) = 0.96 + 0.2·(-0.384) = 0.8832     <- prediccion
+  F(x2,yc) = -2·0.4·0.8832 = -0.70656
+  y2 = y1 + (h/2)·(F(x1,y1)+F(x2,yc)) = 0.96 + 0.1·(-1.09056) = 0.850944</pre>
+          </div>
+          <p style="margin-top:.5rem;">Siguiendo el mismo patrón 3 pasos más, da <code>y(1)=0.372188</code> — la tabla completa ya está más arriba.</p>
+        </div>
+
+        <h3>Punto medio</h3>
+        <p>
+          Usa la pendiente evaluada en el <strong>punto medio</strong> del paso, no en el extremo.
+          Como tampoco se conoce <code>y</code> ahí, se estima con medio paso de Euler:
+        </p>
+        <div class="panel">
+          <pre class="pseudo">xm = (xi + x(i+1)) / 2
+ym = yi + (h/2)·F(xi,yi)          <- medio paso de Euler, para estimar y en xm
+y(i+1) = yi + h·F(xm, ym)</pre>
+        </div>
+        <p>También <code>O(h³)</code> — mismo orden que Heun, con otra idea geométrica.</p>
+
+        <div class="callout verified">
+          <div class="callout-label">Punto medio a mano — primeras 2 iteraciones (mismo problema)</div>
+          <div class="panel" style="margin:.6rem 0;">
+            <pre class="pseudo">Iteracion 1 (i=0): x0=0, y0=1
+  xm = (x0+x1)/2 = (0+0.2)/2 = 0.1
+  ym = y0 + (h/2)·F(x0,y0) = 1 + 0.1·(-2·0·1) = 1 + 0 = 1
+  F(xm,ym) = -2·0.1·1 = -0.2
+  y1 = y0 + h·F(xm,ym) = 1 + 0.2·(-0.2) = 0.96
+
+Iteracion 2 (i=1): x1=0.2, y1=0.96
+  xm = (x1+x2)/2 = (0.2+0.4)/2 = 0.3
+  ym = y1 + (h/2)·F(x1,y1) = 0.96 + 0.1·(-2·0.2·0.96) = 0.96 + 0.1·(-0.384) = 0.9216
+  F(xm,ym) = -2·0.3·0.9216 = -0.55296
+  y2 = y1 + h·F(xm,ym) = 0.96 + 0.2·(-0.55296) = 0.849408</pre>
+          </div>
+          <p style="margin-top:.5rem;">Siguiendo el mismo patrón 3 pasos más, da <code>y(1)=0.364379</code> (el valor más cercano al exacto de los tres métodos, en este ejemplo).</p>
+        </div>
+
+        <div class="callout verified">
+          <div class="callout-label">Ejemplo resuelto a mano y verificado: dy/dx=-2xy, y(0)=1, h=0.2, en [0,1]</div>
+          <p>(la exacta es <code>y=e^(-x²)</code>, así que <code>y(1)=e⁻¹=0,367879</code>)</p>
+          <div class="panel" style="margin:.6rem 0;">
+            <pre class="pseudo">Euler (paso a paso):
+y1 = 1 + 0.2(-2·0·1)       = 1
+y2 = 1 + 0.2(-2·0.2·1)     = 0.92
+y3 = 0.92 + 0.2(-2·0.4·0.92)   = 0.7728
+y4 = 0.7728 + 0.2(-2·0.6·0.7728) = 0.587328
+y5 = 0.587328 + 0.2(-2·0.8·0.587328) = 0.399383   <- y(1) aproximado
+
+error = |0.367879 - 0.399383| = 0.0315</pre>
+          </div>
+          <div class="panel" style="margin:.6rem 0;">
+            <pre class="pseudo">Comparando los 3 metodos en y(1):
+
+Euler:        0.399383   (error 0.03150)
+Heun:         0.372188   (error 0.00431)
+Punto medio:  0.364379   (error 0.00350)
+Exacto:       0.367879</pre>
+          </div>
+          <p style="margin-top:.5rem;">
+            Heun y punto medio dan un error 7-9 veces más chico que Euler, con el mismo <code>h</code>
+            — consistente con que su error es <code>O(h³)</code> contra el <code>O(h²)</code> de Euler.
+          </p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-label">Pseudocódigo (Euler; Heun y punto medio solo cambian la línea de y[i+1])</div>
+          <pre class="pseudo">Definir F(x,y)
+Ingresar x0, y0
+Ingresar xF
+Ingresar n (o h)          h = (xF-x0)/n
+
+x[0] = x0;  y[0] = y0
+Do i = 0,...,n-1
+    x[i+1] = x[i] + h
+    y[i+1] = y[i] + h*F(x[i],y[i])      <- (esta linea cambia segun el metodo)
+    imprimir x[i], y[i] (a un archivo, para graficar)
+end Do</pre>
+        </div>
+
+        <div class="callout verified">
+          <div class="callout-label">Código verificado: edo.cpp</div>
+          <p>Menú con los 3 métodos, mismo esqueleto de entrada/salida (incluye exportar a CSV para graficar, como pide el pseudocódigo). Verificado contra el ejemplo de arriba — coincide exacto, iteración por iteración, en los 3 métodos (incluida una implementación independiente aparte para Heun y punto medio).</p>
+        </div>
+      </section>
+    </div>
+
     <!-- ===================== TRANSVERSAL: GUIA DE PROGRAMAS ===================== -->
     <div class="chapter">
       <div class="chapter-label">Transversal — guía de programas</div>
@@ -2497,6 +2751,20 @@ f'(xn) = (−4f(xn−h) + f(xn−2h) + 3f(xn)) / (2h)     + O(h²)</pre>
                 <td><code>gaussLegendre.cpp</code></td>
                 <td>Cuadratura de Gauss-Legendre, 2 a 6 puntos (tabla de Chapra). Solo función — no acepta tabla de datos.</td>
                 <td>El enunciado pide Gauss-Legendre específicamente, o cuando se necesita mucha precisión con pocos puntos (converge mucho más rápido que Simpson para funciones suaves).</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>EcuacionesDiferenciales/</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Archivo</th><th>Qué hace</th><th>Cuándo usarlo</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><code>edo.cpp</code></td>
+                <td>Menú con Euler, Heun y punto medio para resolver <code>dy/dx=F(x,y)</code>, <code>y(x0)=y0</code>. Mismo esqueleto de entrada/salida en los tres — solo cambia la línea que calcula <code>y[i+1]</code>. Exporta a CSV para graficar.</td>
+                <td>Cualquier EDO de 1er orden que no sea separable (si lo es, resolverla a mano es exacto y más rápido). Heun y punto medio dan bastante más precisión que Euler con el mismo <code>h</code> — conviene usarlos salvo que el enunciado pida Euler específicamente.</td>
               </tr>
             </tbody>
           </table>
