@@ -22,3 +22,7 @@ AjusteDeCurvas/*
 !AjusteDeCurvas/*.cpp
 !AjusteDeCurvas/*.txt
 !AjusteDeCurvas/*.csv
+
+EcuacionesDiferenciales/*.png
+EcuacionesDiferenciales/*.exe
+EcuacionesDiferenciales/*.csv

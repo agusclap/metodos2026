@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Apuntes de Métodos Numéricos</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
@@ -121,6 +121,9 @@
     top: 2rem;
     align-self: start;
     font-size: .89rem;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    padding-right: .5rem;
   }
   nav.toc .toc-group{ margin-bottom: 1.5rem; }
   nav.toc .toc-heading{
@@ -384,7 +387,7 @@
       <ul>
         <li><a href="#que-es-una-edo">Qué es una EDO</a></li>
         <li><a href="#resolver-edo-a-mano">Resolver a mano (separación de variables)</a></li>
-        <li><a href="#metodos-numericos-edo">Euler, Heun y punto medio</a></li>
+        <li><a href="#metodos-numericos-edo">Euler, Heun, punto medio y RK4</a></li>
       </ul>
     </div>
     <div class="toc-group">
@@ -396,7 +399,7 @@
         <li><a href="#geogebra-portable">GeoGebra portable (Linux)</a></li>
       </ul>
     </div>
-    <div class="status">Ecuaciones diferenciales ordinarias agregadas (capítulo 7).</div>
+    <div class="status">RK4 agregado al capítulo 7 (13/10).</div>
   </nav>
 
   <main>
@@ -2439,6 +2442,45 @@ ln(y(x)) = -x²
           </div>
         </div>
 
+        <div class="callout verified">
+          <div class="callout-label">Ejemplo 3 — separable con raíz (cuidado con la rama), usado para verificar RK4</div>
+          <p><code>dy/dx = (2x+1)·√y</code>, con <code>y(0)=1</code>.</p>
+          <div class="panel" style="margin:.6rem 0;">
+            <pre class="pseudo">dy/dx = (2x+1)·√y
+dy/√y = (2x+1) dx
+
+∫[1,y(x)] dy'/√y' = ∫[0,x] (2x'+1) dx'
+2√y'  |[1, y(x)]  =  x'²+x'  |[0, x]
+
+2√y(x) - 2√1 = x² + x
+2√y(x) = x² + x + 2
+
+→ √y(x) = (x²+x+2) / 2
+→ y(x) = ¼·(x²+x+2)²</pre>
+          </div>
+        </div>
+
+        <div class="callout warn">
+          <div class="callout-label">La rama que no sirve (± al resolver con raíz)</div>
+          <p>
+            Integrando <code>dy/√y = 2√y + C</code> en forma indefinida y despejando <code>C</code>
+            con el dato inicial <code>y(0)=1</code>, hace falta <code>√1</code> — y ahí es tentador
+            escribir <code>√1 = ±1</code>, lo que da <strong>dos</strong> candidatos:
+            <code>C=2</code> (si <code>√1=1</code>) o <code>C=-2</code> (si <code>√1=-1</code>).
+          </p>
+          <p style="margin-top:.5rem;">
+            Pero <code>√y</code> (la raíz cuadrada principal) es <strong>siempre ≥ 0</strong> por
+            definición — no es una incógnita con dos signos posibles, es una función que nunca da
+            negativo. En <code>x=0</code> hace falta que <code>√y(0) = √1</code> dé exactamente
+            <code>1</code>, no <code>-1</code>: la rama <code>C=-2</code> directamente no es una
+            solución del problema, no "una solución physically inválida" — es un resultado
+            algebraico que nunca correspondió a la ecuación real. Por eso la única solución es
+            <code>y(x) = ¼(x²+x+2)²</code> (y como <code>x²+x+2</code> tiene discriminante
+            <code>1-8=-7&lt;0</code>, nunca se anula ni cambia de signo — la fórmula vale para
+            todo <code>x</code>, sin romperse en ningún punto).
+          </p>
+        </div>
+
         <div class="panel">
           <div class="panel-label">Forma general</div>
           <div class="formula">
@@ -2457,14 +2499,60 @@ ln(y(x)) = -x²
       </section>
 
       <section class="topic" id="metodos-numericos-edo" style="border-bottom:none; padding-bottom:0;">
-        <h2>Métodos numéricos: Euler, Heun y punto medio</h2>
+        <h2>Métodos numéricos: Euler, Heun, punto medio y RK4</h2>
         <p>
-          Los tres resuelven <code>dy/dx=f(x,y)</code>, <code>y(x0)=y0</code>, en un intervalo
+          Los cuatro resuelven <code>dy/dx=f(x,y)</code>, <code>y(x0)=y0</code>, en un intervalo
           <code>[x0,xF]</code>, dividido en <code>n</code> subintervalos de ancho
           <code>h=(xF-x0)/n</code> — avanzan paso a paso desde <code>(x0,y0)</code>, estimando
-          cuánto sube o baja <code>y</code> en cada paso. La diferencia entre los tres está en
-          <strong>qué pendiente usan</strong> para avanzar.
+          cuánto sube o baja <code>y</code> en cada paso. La diferencia entre todos está en
+          <strong>qué pendiente (o combinación de pendientes) usan</strong> para avanzar.
         </p>
+
+        <h3>La familia Runge-Kutta (de dónde salen Heun y punto medio)</h3>
+        <p>
+          Euler, Heun y punto medio no son recetas sueltas — son casos particulares de la misma
+          idea general: avanzar con una pendiente "representativa" del paso, calculada como un
+          promedio pesado de pendientes evaluadas en distintos puntos:
+        </p>
+        <div class="panel">
+          <div class="formula">y<sub>i+1</sub>&nbsp;=&nbsp;y<sub>i</sub>&nbsp;+&nbsp;h·Φ(x<sub>i</sub>,y<sub>i</sub>,h)</div>
+        </div>
+        <p>
+          <code>Φ</code> es una suma pesada de "pendientes" <code>k</code>, definidas por
+          recurrencia (cada <code>k</code> siguiente usa el anterior para estimar dónde evaluar
+          <code>F</code>). Para <strong>RK de orden 2</strong> (dos pendientes):
+        </p>
+        <div class="panel">
+          <pre class="pseudo">k1 = F(xi, yi)
+k2 = F(xi + p1·h,  yi + q11·h·k1)
+
+Φ = a1·k1 + a2·k2</pre>
+        </div>
+        <p>
+          Los coeficientes <code>a1, a2, p1, q11</code> no son libres: se eligen de forma que el
+          desarrollo de Taylor de <code>y<sub>i+1</sub></code> coincida con el de la solución real
+          hasta el término en <code>h²</code>. Haciendo esa cuenta (desarrollar <code>k2</code> por
+          Taylor e igualar término a término) quedan <strong>3 ecuaciones con 4 incógnitas</strong>:
+        </p>
+        <div class="panel">
+          <div class="formula">a1 + a2 = 1&nbsp;&nbsp;&nbsp;&nbsp;a2·p1 = ½&nbsp;&nbsp;&nbsp;&nbsp;a2·q11 = ½</div>
+        </div>
+        <div class="callout note">
+          <div class="callout-label">Un grado de libertad → infinitas soluciones válidas</div>
+          <p>
+            Como sobra una incógnita, cualquier elección de <code>a2</code> (distinta de 0) da un
+            método de orden 2 válido. Dos elecciones puntuales son justamente Heun y punto medio:
+          </p>
+          <ul>
+            <li><code>a2=½</code>&nbsp;→&nbsp;<code>a1=½, p1=1, q11=1</code> → <strong>Heun</strong> (promedia la pendiente del principio con la del final, estimada por predicción de Euler).</li>
+            <li><code>a2=1</code>&nbsp;→&nbsp;<code>a1=0, p1=½, q11=½</code> → <strong>punto medio</strong> (usa solo la pendiente de la mitad del paso, estimada con medio paso de Euler).</li>
+          </ul>
+          <p style="margin-top:.5rem;">
+            Ninguno de los dos es "más correcto" que el otro — son dos puntos distintos de la misma
+            familia de soluciones, por eso ambos dan el mismo orden de error (<code>O(h³)</code>
+            local) aunque con constantes de error distintas.
+          </p>
+        </div>
 
         <h3>Euler</h3>
         <p>Usa la pendiente de la función <em>en el punto de partida</em> del paso:</p>
@@ -2561,8 +2649,75 @@ Exacto:       0.367879</pre>
           </p>
         </div>
 
+        <h3>Runge-Kutta de orden 4 (RK4)</h3>
+        <p>
+          Extiende la misma idea a <strong>4</strong> pendientes en vez de 1 o 2, con los
+          coeficientes clásicos (resultan de repetir el ajuste por Taylor hasta <code>h⁴</code> —
+          la cuenta es mucho más larga que para RK2, no hace falta rehacerla a mano, alcanza con
+          usar los coeficientes ya resueltos):
+        </p>
         <div class="panel">
-          <div class="panel-label">Pseudocódigo (Euler; Heun y punto medio solo cambian la línea de y[i+1])</div>
+          <div class="formula">y<sub>i+1</sub>&nbsp;=&nbsp;y<sub>i</sub>&nbsp;+&nbsp;<span class="frac"><span class="num">h</span><span class="den">6</span></span>·(k1 + 2k2 + 2k3 + k4)</div>
+        </div>
+        <div class="panel">
+          <pre class="pseudo">k1 = F(xi,        yi)                    <- pendiente al principio del paso
+k2 = F(xi + h/2,  yi + (h/2)·k1)         <- pendiente en la mitad, estimada con k1
+k3 = F(xi + h/2,  yi + (h/2)·k2)         <- pendiente en la mitad otra vez, reestimada con k2
+k4 = F(xi + h,    yi + h·k3)             <- pendiente al final, estimada con k3</pre>
+        </div>
+        <p>Error de truncamiento local <code>O(h⁵)</code> (global <code>O(h⁴)</code>) — dos órdenes mejor que Heun/punto medio, al costo de evaluar <code>F</code> 4 veces por paso en vez de 1 o 2.</p>
+
+        <div class="callout verified">
+          <div class="callout-label">RK4 a mano — primeras 2 iteraciones (ejemplo de verificación: dy/dx=(2x+1)·√y, y(0)=1, h=0.2)</div>
+          <div class="panel" style="margin:.6rem 0;">
+            <pre class="pseudo">Iteracion 1 (i=0): x0=0, y0=1
+  k1 = F(0, 1)              = (2·0+1)·√1        = 1.000000
+  k2 = F(0.1, 1+0.1·k1)     = F(0.1, 1.1)       = 1.2·√1.1       = 1.258571
+  k3 = F(0.1, 1+0.1·k2)     = F(0.1, 1.125857)  = 1.2·√1.125857  = 1.273271
+  k4 = F(0.2, 1+0.2·k3)     = F(0.2, 1.254654)  = 1.4·√1.254654  = 1.568159
+
+  y1 = y0 + (0.2/6)·(k1+2k2+2k3+k4)
+     = 1 + 0.033333·(1 + 2.517141 + 2.546543 + 1.568159)
+     = 1 + 0.033333·7.631843 = 1.254395
+
+Iteracion 2 (i=1): x1=0.2, y1=1.254395
+  k1 = F(0.2, 1.254395)             = 1.4·√1.254395   = 1.567997
+  k2 = F(0.3, 1.254395+0.1·k1)      = 1.6·√1.411195   = 1.900693
+  k3 = F(0.3, 1.254395+0.1·k2)      = 1.6·√1.444464   = 1.922974
+  k4 = F(0.4, 1.254395+0.2·k3)      = 1.8·√1.638990   = 2.304415
+
+  y2 = y1 + (0.2/6)·(k1+2k2+2k3+k4)
+     = 1.254395 + 0.033333·11.519745 = 1.638387</pre>
+          </div>
+          <p style="margin-top:.5rem;">
+            La exacta en <code>x=0.2</code> es <code>¼(0.04+0.2+2)²=1.2544</code> y en
+            <code>x=0.4</code> es <code>¼(0.16+0.4+2)²=1.6384</code> — RK4 ya está acertando las
+            primeras 4-5 cifras decimales con un solo paso de margen, h=0.2.
+          </p>
+        </div>
+
+        <div class="callout verified">
+          <div class="callout-label">Los 4 métodos juntos, mismo ejemplo: dy/dx=(2x+1)·√y, y(0)=1, h=0.2, en [0,1]</div>
+          <p>(la exacta es <code>y(x)=¼(x²+x+2)²</code>, así que <code>y(1)=¼·4²=4</code>)</p>
+          <div class="panel" style="margin:.6rem 0;">
+            <pre class="pseudo">Euler:        3.395289   (error 0.604711)
+Heun:         3.981125   (error 0.018875)
+Punto medio:  3.966268   (error 0.033732)
+RK4:          3.999932   (error 0.000068)
+Exacto:       4.000000</pre>
+          </div>
+          <p style="margin-top:.5rem;">
+            RK4 da un error casi <strong>300 veces más chico</strong> que Heun con el mismísimo
+            <code>h</code> — consistente con pasar de <code>O(h³)</code> a <code>O(h⁴)</code> de
+            error global. Curiosamente acá punto medio sale peor que Heun (al revés que en el
+            ejemplo anterior): el orden de error es una cota asintótica, no garantiza que un
+            método de orden 3 le gane siempre al otro de orden 3 en cualquier problema puntual —
+            depende de las constantes de error de cada uno, que dependen de la función.
+          </p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-label">Pseudocódigo (Euler; Heun, punto medio y RK4 solo cambian cómo se calcula y[i+1])</div>
           <pre class="pseudo">Definir F(x,y)
 Ingresar x0, y0
 Ingresar xF
@@ -2578,7 +2733,7 @@ end Do</pre>
 
         <div class="callout verified">
           <div class="callout-label">Código verificado: edo.cpp</div>
-          <p>Menú con los 3 métodos, mismo esqueleto de entrada/salida (incluye exportar a CSV para graficar, como pide el pseudocódigo). Verificado contra el ejemplo de arriba — coincide exacto, iteración por iteración, en los 3 métodos (incluida una implementación independiente aparte para Heun y punto medio).</p>
+          <p>Menú con los 4 métodos, mismo esqueleto de entrada/salida (incluye exportar a CSV con la exacta y el error, para graficar la aproximada contra la exacta). Verificado contra los ejemplos de arriba — coincide exacto, iteración por iteración, en los 4 métodos (RK4 además cruzado a mano con <code>k1..k4</code> paso a paso).</p>
         </div>
       </section>
     </div>
@@ -2763,8 +2918,8 @@ end Do</pre>
             <tbody>
               <tr>
                 <td><code>edo.cpp</code></td>
-                <td>Menú con Euler, Heun y punto medio para resolver <code>dy/dx=F(x,y)</code>, <code>y(x0)=y0</code>. Mismo esqueleto de entrada/salida en los tres — solo cambia la línea que calcula <code>y[i+1]</code>. Exporta a CSV para graficar.</td>
-                <td>Cualquier EDO de 1er orden que no sea separable (si lo es, resolverla a mano es exacto y más rápido). Heun y punto medio dan bastante más precisión que Euler con el mismo <code>h</code> — conviene usarlos salvo que el enunciado pida Euler específicamente.</td>
+                <td>Menú con Euler, Heun, punto medio y RK4 para resolver <code>dy/dx=F(x,y)</code>, <code>y(x0)=y0</code>. Mismo esqueleto de entrada/salida en los cuatro — solo cambia cómo se calcula <code>y[i+1]</code>. Exporta a CSV (con la exacta y el error, si se conoce) para graficar.</td>
+                <td>Cualquier EDO de 1er orden que no sea separable (si lo es, resolverla a mano es exacto y más rápido). RK4 da la mejor precisión de los cuatro para el mismo <code>h</code> — conviene usarlo salvo que el enunciado pida específicamente otro método.</td>
               </tr>
             </tbody>
           </table>
