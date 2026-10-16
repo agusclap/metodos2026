@@ -8,12 +8,19 @@ using namespace std;
 void euler();
 void heun();
 void puntoMedio();
+void rk4();
 
 // Solucion exacta del problema (si se conoce -- no siempre es posible, pero
 // cuando la EDO es separable, se puede resolver a mano como en el apunte y
 // poner el resultado aca). Se usa solo para comparar/graficar; si no se
 // conoce para el problema que estes resolviendo, dejarla devolviendo NAN.
-double yExacta(double x) { return exp(-x * x); } // <-- ACA se elige el problema (o NAN si no se conoce)
+//
+// Problema actual (el de verificacion, sirve para probar los 4 metodos):
+//   dy/dx = (2x+1)*raiz(y),  y(0)=1
+//   Resuelto a mano (separable): y(x) = (1/4)*(x^2+x+2)^2
+//   (la otra rama, con -2 en vez de +2, no es valida: haria falta que
+//   raiz(y) de negativo en x=0, lo cual no tiene sentido)
+double yExacta(double x) { return exp(-x); } // <-- ACA se elige el problema (o NAN si no se conoce)
 
 int main() {
     int opcion;
@@ -22,7 +29,8 @@ int main() {
         cout << "1. Metodo de Euler" << endl;
         cout << "2. Metodo de Heun" << endl;
         cout << "3. Metodo del punto medio" << endl;
-        cout << "4. Salir" << endl;
+        cout << "4. Metodo de Runge-Kutta de orden 4 (RK4)" << endl;
+        cout << "5. Salir" << endl;
         cout << "Seleccione una opcion: ";
         cin >> opcion;
 
@@ -37,12 +45,15 @@ int main() {
                 puntoMedio();
                 break;
             case 4:
+                rk4();
+                break;
+            case 5:
                 cout << "Saliendo del programa." << endl;
                 break;
             default:
                 cout << "Opcion no valida, intente de nuevo." << endl;
         }
-    } while (opcion != 4);
+    } while (opcion != 5);
     return 0;
 }
 
@@ -110,7 +121,7 @@ void mostrarYExportar(const vector<double> &x, const vector<double> &y, const st
 // Error de truncamiento local ~ O(h^2) por paso.
 // ============================================================================
 void euler() {
-    auto F = [](double x, double y) { return -2 * x * y; }; // <-- ACA se elige el problema
+    auto F = [](double x, double y) { return 0.01*(0.07 - y) * (0.05 - y); }; // <-- ACA se elige el problema
 
     double x0, y0, xF, h;
     int n;
@@ -134,7 +145,7 @@ void euler() {
 // Error de truncamiento local ~ O(h^3) por paso -- un orden mas que Euler.
 // ============================================================================
 void heun() {
-    auto F = [](double x, double y) { return -2 * x * y; }; // <-- ACA se elige el problema
+    auto F = [](double x, double y) { return (2*x+1) * sqrt(y); }; // <-- ACA se elige el problema
 
     double x0, y0, xF, h;
     int n;
@@ -159,7 +170,7 @@ void heun() {
 // Error de truncamiento local ~ O(h^3), igual que Heun.
 // ============================================================================
 void puntoMedio() {
-    auto F = [](double x, double y) { return -2 * x * y; }; // <-- ACA se elige el problema
+    auto F = [](double x, double y) { return (2*x+1) * sqrt(y); }; // <-- ACA se elige el problema
 
     double x0, y0, xF, h;
     int n;
@@ -176,4 +187,36 @@ void puntoMedio() {
     }
 
     mostrarYExportar(x, y, "puntoMedio");
+}
+
+// ============================================================================
+// Runge-Kutta de orden 4 (RK4 clasico): en pseudocodigo es practicamente
+// igual a Euler -- lo unico que cambia es la cuenta de y[i+1], que ahora
+// promedia 4 pendientes (k1..k4) en vez de usar una sola.
+// k1: pendiente al principio del paso.
+// k2: pendiente en el punto medio, estimada con medio paso usando k1.
+// k3: pendiente en el punto medio otra vez, pero reestimada usando k2.
+// k4: pendiente al final del paso, estimada con un paso entero usando k3.
+// Error de truncamiento local ~ O(h^5) -- dos ordenes mas que Heun/punto medio.
+// ============================================================================
+void rk4() {
+    auto F = [](double x, double y) { return 3*y - 4*exp(-x); }; // <-- ACA se elige el problema
+
+    double x0, y0, xF, h;
+    int n;
+    leerDatosComunes(x0, y0, xF, n, h);
+
+    vector<double> x(n + 1), y(n + 1);
+    x[0] = x0;
+    y[0] = y0;
+    for (int i = 0; i < n; i++) {
+        x[i + 1] = x[i] + h;
+        double k1 = F(x[i], y[i]);
+        double k2 = F(x[i] + h / 2.0, y[i] + (h / 2.0) * k1);
+        double k3 = F(x[i] + h / 2.0, y[i] + (h / 2.0) * k2);
+        double k4 = F(x[i] + h, y[i] + h * k3);
+        y[i + 1] = y[i] + (h / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4);
+    }
+
+    mostrarYExportar(x, y, "rk4");
 }
